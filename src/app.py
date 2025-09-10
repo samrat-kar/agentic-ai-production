@@ -97,14 +97,9 @@ Answer:
         Args:
             documents: List of documents with 'content' and optional 'metadata'
         """
-        # TODO: Implement document addition to knowledge base
-        # HINT: Use self.vector_db.add_documents() to add documents to the vector database
-        # HINT: Print a confirmation message showing how many documents were added
+        self.vector_db.add_documents(documents)
 
-        # Your implementation here
-        pass
-
-    def query(self, question: str, n_results: int = 3) -> Dict[str, Any]:
+    def query(self, question: str, n_results: int = 3) -> str:
         """
         Query the RAG assistant.
 
@@ -115,36 +110,32 @@ Answer:
         Returns:
             Dictionary containing the answer and retrieved context
         """
+        llm_answer = ""
         # TODO: Implement the RAG query pipeline
         # HINT: Use self.vector_db.search() to retrieve relevant context chunks
         # HINT: Combine the retrieved document chunks into a single context string
         # HINT: Use self.chain.invoke() with context and question to generate the response
-        # HINT: Return a dictionary with keys: 'answer', 'context', 'metadata', 'distances'
-        # HINT: Handle the case where no relevant context is found
+        # HINT: Return a string answer from the LLM
 
         # Your implementation here
-        return {
-            "answer": "Not implemented yet",
-            "context": [],
-            "metadata": [],
-            "distances": [],
-        }
+        return llm_answer
 
 
-def load_documents() -> List[Dict[str, Any]]:
+def load_documents() -> List[str]:
     """
     Load documents for demonstration.
 
     Returns:
         List of sample documents
     """
+    results = []
     # TODO: Implement document loading
     # HINT: Read the documents from the data directory
     # HINT: Return a list of documents
     # HINT: Your implementation depends on the type of documents you are using (.txt, .pdf, etc.)
 
     # Your implementation here
-    pass
+    return results
 
 
 def main():
