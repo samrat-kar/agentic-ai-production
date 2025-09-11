@@ -150,7 +150,7 @@ def main():
         sample_docs = load_documents()
         print(f"Loaded {len(sample_docs)} sample documents")
 
-        # TODO: Uncomment the following line once you implement the methods:
+        # TODO: Uncomment the following lines once you implement the methods:
         # assistant.add_documents(sample_docs)
 
         done = False

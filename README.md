@@ -1,188 +1,326 @@
 # RAG-Based AI Assistant - AAIDC Project 1 Template
 
-This repository contains a bare minimum working template for Project 1 in the Agentic AI Developer Certification (AAIDC) program. It implements a Retrieval-Augmented Generation (RAG) system using ChromaDB, HuggingFace embeddings, and OpenAI's language models.
+Welcome to your RAG (Retrieval-Augmented Generation) project! This repository provides a **template** that you need to complete. The framework is set up, but the core functionality is missing - that's your job to implement!
 
-## 🚀 Features
+## 🎯 What You Need to Build
 
-- **RAG-based AI Assistant**: Complete retrieval-augmented generation pipeline
-- **Vector Database**: ChromaDB integration for document storage and similarity search  
-- **Document Embedding**: HuggingFace Sentence Transformers for text embeddings
-- **Simple Text Chunking**: Basic space-based text splitting for document processing
-- **OpenAI Integration**: Uses OpenAI's GPT models for response generation
-- **Interactive Interface**: Command-line interface for querying the assistant
-- **Sample Data**: Pre-loaded with AI/ML related documents for demonstration
+You will implement a complete RAG system that can:
 
-## 📋 Requirements
+- Load and chunk documents from the `data/` directory
+- Create embeddings and store them in a vector database
+- Search for relevant context based on user queries
+- Generate responses using retrieved context and an LLM
 
-- Python 3.8+
-- OpenAI API key
-- Internet connection for downloading models
+## 📋 Prerequisites
 
-## 🛠️ Setup Instructions
+Before starting, make sure you have:
 
-### 1. Clone the Repository
-```bash
-git clone <your-repo-url>
-cd rt-aaidc-project1-template
+- Python 3.8 or higher installed
+- An API key from **one** of these providers:
+  - [OpenAI](https://platform.openai.com/api-keys) (most popular)
+  - [Groq](https://console.groq.com/keys) (free tier available)
+  - [Google AI](https://aistudio.google.com/app/apikey) (competitive pricing)
+
+## 🚀 Quick Setup
+
+1. **Install dependencies:**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. **Configure your API key:**
+
+   ```bash
+   # Create environment file (choose the method that works on your system)
+   cp .env.example .env    # Linux/Mac
+   copy .env.example .env  # Windows
+   ```
+
+   Edit `.env` and add your API key:
+
+   ```
+   OPENAI_API_KEY=your_key_here
+   # OR
+   GROQ_API_KEY=your_key_here  
+   # OR
+   GOOGLE_API_KEY=your_key_here
+   ```
+3. **Test the setup:**
+
+   ```bash
+   python src/app.py
+   ```
+
+## 📝 Implementation Steps
+
+### Step 0: Prepare Your Documents
+
+**Replace the sample documents with your own content**
+
+The `data/` directory contains sample files on various topics. Replace these with documents relevant to your domain:
+
+```
+data/
+├── your_topic_1.txt
+├── your_topic_2.txt
+└── your_topic_3.txt
 ```
 
-### 2. Install Dependencies
-```bash
-pip install -r requirements.txt
-```
+Each file should contain text content you want your RAG system to search through.
 
-### 3. Environment Configuration
-Create a `.env` file in the root directory:
-```bash
-cp .env_example .env
-```
+---
 
-Edit the `.env` file and add your OpenAI API key:
-```
-OPENAI_API_KEY=your_openai_api_key_here
-```
+### Step 1: Implement Text Chunking
 
-### 4. Run the Application
-```bash
-cd src
-python app.py
-```
-
-## 💻 Usage
-
-### Basic Usage
-1. Run the application: `python src/app.py`
-2. The system will load sample documents automatically
-3. Ask questions in the interactive prompt
-4. Type 'quit' to exit
-
-### Example Queries
-- "What is artificial intelligence?"
-- "Explain machine learning"
-- "What are the stages of a data science workflow?"
-- "Tell me about AI ethics"
-
-### Adding Your Own Documents
-You can modify the `load_sample_documents()` function in `src/app.py` to add your own documents:
+**Location:** `src/vectordb.py`
 
 ```python
-documents = [
-    {
-        "content": "Your document content here...",
-        "metadata": {"title": "Document Title", "category": "your_category"}
-    }
-]
+def chunk_text(self, text: str, chunk_size: int = 500) -> List[str]:
+    """
+    Split text into smaller chunks for better retrieval.
+  
+    Args:
+        text: Input text to chunk
+        chunk_size: Approximate number of characters per chunk
+  
+    Returns:
+        List of text chunks
+    """
+    # TODO: Your implementation here
 ```
 
-## 🏗️ Architecture
+**What you need to do:**
 
-### Components
+- Choose a chunking strategy (word-based, sentence-based, or use LangChain's text splitters)
+- Split the input text into manageable chunks
+- Return a list of text strings
 
-1. **VectorDB (`src/vectordb.py`)**
-   - ChromaDB wrapper for vector storage
-   - HuggingFace embeddings integration
-   - Simple text chunking functionality
-   - Document search and retrieval
+**Hint:** You have multiple options - start simple with word-based splitting or explore LangChain's `RecursiveCharacterTextSplitter`.
 
-2. **RAGAssistant (`src/app.py`)**
-   - Main application class
-   - OpenAI LLM integration
-   - Query processing pipeline
-   - Interactive interface
+---
 
-### Data Flow
-1. **Document Ingestion**: Text documents are chunked and embedded
-2. **Storage**: Embeddings stored in ChromaDB vector database  
-3. **Query Processing**: User queries are embedded and matched against stored documents
-4. **Context Retrieval**: Most similar document chunks are retrieved
-5. **Response Generation**: OpenAI model generates responses using retrieved context
+### Step 2: Implement Document Ingestion
 
-## 🔧 Configuration Options
+**Location:** `src/vectordb.py`
 
-### Environment Variables
-- `OPENAI_API_KEY`: Your OpenAI API key (required)
-- `OPENAI_MODEL`: OpenAI model to use (default: gpt-3.5-turbo)
-- `EMBEDDING_MODEL`: HuggingFace model for embeddings (default: sentence-transformers/all-MiniLM-L6-v2)
-- `CHROMA_COLLECTION_NAME`: ChromaDB collection name (default: rag_documents)
+```python
+def add_documents(self, documents: List[Dict[str, Any]]) -> None:
+    """
+    Process documents and add them to the vector database.
+  
+    Args:
+        documents: List of documents with 'content' and optional 'metadata'
+    """
+    # TODO: Your implementation here
+```
 
-### Customization
-- **Chunk Size**: Modify `chunk_size` parameter in `VectorDB.chunk_text()`
-- **Retrieval Count**: Adjust `n_results` in query methods
-- **Temperature**: Change LLM temperature in `RAGAssistant.__init__()`
+**What you need to do:**
+
+- Loop through the documents list
+- Extract content and metadata from each document
+- Use your `chunk_text()` method to split documents
+- Create embeddings using `self.embedding_model.encode()`
+- Store everything in ChromaDB using `self.collection.add()`
+
+**Key components:**
+
+- Chunk each document's content
+- Generate unique IDs for each chunk
+- Create embeddings for all chunks
+- Store in the vector database
+
+---
+
+### Step 3: Implement Similarity Search
+
+**Location:** `src/vectordb.py`
+
+```python
+def search(self, query: str, n_results: int = 5) -> Dict[str, Any]:
+    """
+    Find documents similar to the query.
+  
+    Args:
+        query: Search query
+        n_results: Number of results to return
+  
+    Returns:
+        Dictionary with search results
+    """
+    # TODO: Your implementation here
+```
+
+**What you need to do:**
+
+- Create an embedding for the query using `self.embedding_model.encode()`
+- Search the ChromaDB collection using `self.collection.query()`
+- Return results in the expected format with keys: `documents`, `metadatas`, `distances`, `ids`
+
+---
+
+### Step 4: Implement Document Loading in RAG Assistant
+
+**Location:** `src/app.py`
+
+```python
+def add_documents(self, documents: List[Dict[str, Any]]) -> None:
+    """
+    Add documents to the RAG system's knowledge base.
+  
+    Args:
+        documents: List of documents to add
+    """
+    # TODO: Your implementation here
+```
+
+**What you need to do:**
+
+- Call `self.vector_db.add_documents()` with the provided documents
+- Add appropriate logging/print statements
+
+---
+
+### Step 5: Implement RAG Query Pipeline
+
+**Location:** `src/app.py`
+
+```python
+def query(self, question: str, n_results: int = 3) -> Dict[str, Any]:
+    """
+    Answer questions using retrieved context.
+  
+    Args:
+        question: User's question
+        n_results: Number of context chunks to retrieve
+  
+    Returns:
+        Dictionary with answer and context information
+    """
+    # TODO: Your implementation here
+```
+
+**What you need to do:**
+
+- Use `self.vector_db.search()` to find relevant context
+- Combine retrieved chunks into a context string
+- Use `self.chain.invoke()` to generate a response
+- Return a dictionary with the answer and metadata
+
+**The RAG pipeline:**
+
+1. Search for relevant chunks
+2. Combine chunks into context
+3. Generate response using LLM + context
+4. Return structured results
+
+---
+
+## 🧪 Testing Your Implementation
+
+### Test Individual Components
+
+1. **Test chunking:**
+
+   ```python
+   from src.vectordb import VectorDB
+   vdb = VectorDB()
+   chunks = vdb.chunk_text("Your test text here...")
+   print(f"Created {len(chunks)} chunks")
+   ```
+2. **Test document loading:**
+
+   ```python
+   documents = [{"content": "Test document", "metadata": {"title": "Test"}}]
+   vdb.add_documents(documents)
+   ```
+3. **Test search:**
+
+   ```python
+   results = vdb.search("your test query")
+   print(f"Found {len(results['documents'])} results")
+   ```
+
+### Test Full System
+
+Once implemented, run:
+
+```bash
+python src/app.py
+```
+
+Try these example questions:
+
+- "What is [topic from your documents]?"
+- "Explain [concept from your documents]"
+- "How does [process from your documents] work?"
+
+---
 
 ## 📁 Project Structure
 
 ```
 rt-aaidc-project1-template/
 ├── src/
-│   ├── app.py              # Main RAG assistant application
-│   └── vectordb.py         # Vector database wrapper
-├── data/
-│   └── sample_documents.txt # Sample documents for testing
-├── requirements.txt        # Python dependencies
-├── .env_example           # Environment variables template
-├── .gitignore            # Git ignore file
-└── README.md             # This file
+│   ├── app.py           # Main RAG application (implement Steps 4-5)
+│   └── vectordb.py      # Vector database wrapper (implement Steps 1-3)
+├── data/               # Replace with your documents (Step 0)
+│   ├── *.txt          # Your text files here
+├── requirements.txt    # All dependencies included
+├── .env.example       # Environment template
+└── README.md          # This guide
 ```
 
-## 🧪 Testing the System
+---
 
-### Verify Installation
-```bash
-cd src
-python -c "from app import RAGAssistant; print('Installation successful!')"
-```
-
-### Test Basic Functionality
-```bash
-cd src
-python app.py
-# Ask: "What is machine learning?"
-# Expected: Response based on loaded sample documents
-```
-
-## 🚨 Troubleshooting
+## 🆘 Getting Help
 
 ### Common Issues
 
-1. **Missing OpenAI API Key**
-   - Error: `OPENAI_API_KEY environment variable is required`
-   - Solution: Add your API key to the `.env` file
+**Import Errors:**
 
-2. **Model Download Issues**
-   - Error: Network errors when downloading HuggingFace models
-   - Solution: Ensure stable internet connection, models will be cached locally
+```bash
+pip install -r requirements.txt
+```
 
-3. **ChromaDB Permissions**
-   - Error: Unable to create `chroma_db` directory
-   - Solution: Ensure write permissions in the project directory
+**API Key Errors:**
 
-### Performance Notes
-- First run may be slower due to model downloads
-- Embedding generation time depends on document size
-- Consider using smaller embedding models for faster performance
+- Check your `.env` file has the correct API key
+- Verify the key is valid and has credits/quota
 
-## 📚 Key Learning Objectives
+**Empty Search Results:**
 
-This template demonstrates:
-- ✅ RAG system architecture and implementation
-- ✅ Vector database integration with ChromaDB
-- ✅ Document embedding using HuggingFace models
-- ✅ Text chunking strategies for document processing
-- ✅ LangChain integration for LLM workflows
-- ✅ Environment configuration and security best practices
+- Make sure you've implemented and called `add_documents()`
+- Check that your documents were actually added to the database
 
-## 🔗 Resources
+**Poor Responses:**
 
-- [ChromaDB Documentation](https://docs.trychroma.com/)
-- [HuggingFace Sentence Transformers](https://www.sbert.net/)
-- [LangChain Documentation](https://python.langchain.com/)
-- [OpenAI API Documentation](https://platform.openai.com/docs)
+- Try different chunking strategies
+- Adjust the number of retrieved results (`n_results`)
+- Experiment with different embedding models
 
-## 📝 License
+---
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## 🎓 Learning Objectives
 
-## 🤝 Contributing
+By completing this project, you will:
 
-This is a template project for educational purposes. Feel free to fork and customize for your own RAG applications!
+- ✅ Understand RAG architecture and data flow
+- ✅ Implement text chunking strategies
+- ✅ Work with vector databases and embeddings
+- ✅ Build LLM-powered applications with LangChain
+- ✅ Handle multiple API providers
+- ✅ Create production-ready AI applications
+
+---
+
+## 🏁 Success Criteria
+
+Your implementation is complete when:
+
+1. ✅ You can load your own documents
+2. ✅ The system chunks and embeds documents
+3. ✅ Search returns relevant results
+4. ✅ The RAG system generates contextual answers
+5. ✅ You can ask questions and get meaningful responses
+
+**Good luck building your RAG system! 🚀**
