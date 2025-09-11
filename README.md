@@ -11,6 +11,47 @@ You will implement a complete RAG system that can:
 - Search for relevant context based on user queries
 - Generate responses using retrieved context and an LLM
 
+## 🔧 Implementation Freedom
+
+**Important:** This template uses specific packages (ChromaDB, LangChain, HuggingFace Transformers) and approaches, but **you are completely free to use whatever you prefer!**
+
+### Alternative Options You Can Choose:
+
+**Vector Databases:**
+- FAISS (Facebook AI Similarity Search)
+- Pinecone
+- Weaviate
+- Qdrant
+- Or any other vector store you prefer
+
+**LLM Frameworks:**
+- Direct API calls (OpenAI, Anthropic, etc.)
+- Ollama for local models
+- Hugging Face Transformers
+- LlamaIndex instead of LangChain
+
+**Embedding Models:**
+- OpenAI embeddings (ada-002)
+- Cohere embeddings
+- Any Hugging Face model
+- Local embedding models
+
+**Text Processing:**
+- Custom chunking logic
+- spaCy for advanced NLP
+- NLTK for text processing
+- Your own parsing methods
+
+### Why This Template Exists
+
+This template provides **one working approach** that's:
+- ✅ Well-documented and beginner-friendly
+- ✅ Uses popular, stable packages
+- ✅ Demonstrates core RAG concepts clearly
+- ✅ Gets you started quickly
+
+**Feel free to replace any component with your preferred tools!** The learning objectives remain the same regardless of your technology choices.
+
 ## 📋 Prerequisites
 
 Before starting, make sure you have:
