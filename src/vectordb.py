@@ -73,12 +73,12 @@ class VectorDB:
 
         return chunks
 
-    def add_documents(self, documents: List[Dict[str, Any]]) -> None:
+    def add_documents(self, documents: List) -> None:
         """
         Add documents to the vector database.
 
         Args:
-            documents: List of documents with 'content' and optional 'metadata'
+            documents: List of documents
         """
         # TODO: Implement document ingestion logic
         # HINT: Loop through each document in the documents list

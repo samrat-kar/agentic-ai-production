@@ -12,6 +12,23 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 load_dotenv()
 
 
+def load_documents() -> List[str]:
+    """
+    Load documents for demonstration.
+
+    Returns:
+        List of sample documents
+    """
+    results = []
+    # TODO: Implement document loading
+    # HINT: Read the documents from the data directory
+    # HINT: Return a list of documents
+    # HINT: Your implementation depends on the type of documents you are using (.txt, .pdf, etc.)
+
+    # Your implementation here
+    return results
+
+
 class RAGAssistant:
     """
     A simple RAG-based AI assistant using ChromaDB and multiple LLM providers.
@@ -90,12 +107,12 @@ Answer:
 
         return None
 
-    def add_documents(self, documents: List[Dict[str, Any]]) -> None:
+    def add_documents(self, documents: List) -> None:
         """
         Add documents to the knowledge base.
 
         Args:
-            documents: List of documents with 'content' and optional 'metadata'
+            documents: List of documents
         """
         self.vector_db.add_documents(documents)
 
@@ -119,23 +136,6 @@ Answer:
 
         # Your implementation here
         return llm_answer
-
-
-def load_documents() -> List[str]:
-    """
-    Load documents for demonstration.
-
-    Returns:
-        List of sample documents
-    """
-    results = []
-    # TODO: Implement document loading
-    # HINT: Read the documents from the data directory
-    # HINT: Return a list of documents
-    # HINT: Your implementation depends on the type of documents you are using (.txt, .pdf, etc.)
-
-    # Your implementation here
-    return results
 
 
 def main():
