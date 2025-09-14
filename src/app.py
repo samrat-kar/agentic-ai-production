@@ -70,7 +70,7 @@ Answer:
         groq_key = os.getenv("GROQ_API_KEY")
         if groq_key:
             try:
-                model_name = os.getenv("GROQ_MODEL", "llama3-8b-8192")
+                model_name = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
                 print(f"Using Groq model: {model_name}")
                 return ChatGroq(api_key=groq_key, model=model_name, temperature=0.0)
             except ImportError:
