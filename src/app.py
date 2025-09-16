@@ -49,19 +49,11 @@ class RAGAssistant:
         self.vector_db = VectorDB()
 
         # Create RAG prompt template
-        self.prompt_template = ChatPromptTemplate.from_template(
-            """
-You are a helpful AI assistant. Use the following retrieved context to answer the user's question.
-If the context doesn't contain relevant information, say so and provide a general response based on your knowledge.
-
-Context:
-{context}
-
-Question: {question}
-
-Answer:
-"""
-        )
+        # TODO: Implement your RAG prompt template
+        # HINT: Use ChatPromptTemplate.from_template() with a template string
+        # HINT: Your template should include placeholders for {context} and {question}
+        # HINT: Design your prompt to effectively use retrieved context to answer questions
+        self.prompt_template = None  # Your implementation here
 
         # Create the chain
         self.chain = self.prompt_template | self.llm | StrOutputParser()
@@ -150,8 +142,7 @@ def main():
         sample_docs = load_documents()
         print(f"Loaded {len(sample_docs)} sample documents")
 
-        # TODO: Uncomment the following lines once you implement the methods:
-        # assistant.add_documents(sample_docs)
+        assistant.add_documents(sample_docs)
 
         done = False
 
