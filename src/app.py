@@ -1,5 +1,5 @@
 import os
-from typing import List, Dict, Any
+from typing import List
 from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -66,38 +66,33 @@ class RAGAssistant:
         Tries OpenAI, Groq, and Google Gemini in that order.
         """
         # Check for OpenAI API key
-        openai_key = os.getenv("OPENAI_API_KEY")
-        if openai_key:
-            try:
-                model_name = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-                print(f"Using OpenAI model: {model_name}")
-                return ChatOpenAI(api_key=openai_key, model=model_name, temperature=0.0)
-            except ImportError:
-                print("Warning: langchain-openai not installed, skipping OpenAI")
+        if os.getenv("OPENAI_API_KEY"):
+            model_name = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+            print(f"Using OpenAI model: {model_name}")
+            return ChatOpenAI(
+                api_key=os.getenv("OPENAI_API_KEY"), model=model_name, temperature=0.0
+            )
 
-        # Check for Groq API key
-        groq_key = os.getenv("GROQ_API_KEY")
-        if groq_key:
-            try:
-                model_name = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
-                print(f"Using Groq model: {model_name}")
-                return ChatGroq(api_key=groq_key, model=model_name, temperature=0.0)
-            except ImportError:
-                print("Warning: langchain-groq not installed, skipping Groq")
+        elif os.getenv("GROQ_API_KEY"):
+            model_name = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+            print(f"Using Groq model: {model_name}")
+            return ChatGroq(
+                api_key=os.getenv("GROQ_API_KEY"), model=model_name, temperature=0.0
+            )
 
-        # Check for Google API key
-        google_key = os.getenv("GOOGLE_API_KEY")
-        if google_key:
-            try:
-                model_name = os.getenv("GOOGLE_MODEL", "gemini-2.0-flash")
-                print(f"Using Google Gemini model: {model_name}")
-                return ChatGoogleGenerativeAI(
-                    google_api_key=google_key, model=model_name, temperature=0.0
-                )
-            except ImportError:
-                print("Warning: langchain-google-genai not installed, skipping Google")
+        elif os.getenv("GOOGLE_API_KEY"):
+            model_name = os.getenv("GOOGLE_MODEL", "gemini-2.0-flash")
+            print(f"Using Google Gemini model: {model_name}")
+            return ChatGoogleGenerativeAI(
+                google_api_key=os.getenv("GOOGLE_API_KEY"),
+                model=model_name,
+                temperature=0.0,
+            )
 
-        return None
+        else:
+            raise ValueError(
+                "No valid API key found. Please set one of: OPENAI_API_KEY, GROQ_API_KEY, or GOOGLE_API_KEY in your .env file"
+            )
 
     def add_documents(self, documents: List) -> None:
         """
@@ -108,12 +103,12 @@ class RAGAssistant:
         """
         self.vector_db.add_documents(documents)
 
-    def query(self, question: str, n_results: int = 3) -> str:
+    def invoke(self, input: str, n_results: int = 3) -> str:
         """
         Query the RAG assistant.
 
         Args:
-            question: User's question
+            input: User's input
             n_results: Number of relevant chunks to retrieve
 
         Returns:
