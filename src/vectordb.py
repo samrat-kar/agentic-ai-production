@@ -1,12 +1,12 @@
 import os
-import chromadb
 from typing import List, Dict, Any
-from sentence_transformers import SentenceTransformer
+import numpy as np
+from langchain_openai import OpenAIEmbeddings
 
 
 class VectorDB:
     """
-    A simple vector database wrapper using ChromaDB with HuggingFace embeddings.
+    A simple in-memory vector database wrapper using OpenAI embeddings.
     """
 
     def __init__(self, collection_name: str = None, embedding_model: str = None):
@@ -14,63 +14,59 @@ class VectorDB:
         Initialize the vector database.
 
         Args:
-            collection_name: Name of the ChromaDB collection
-            embedding_model: HuggingFace model name for embeddings
+            collection_name: Logical collection name (kept for compatibility)
+            embedding_model: OpenAI embedding model name
         """
         self.collection_name = collection_name or os.getenv(
             "CHROMA_COLLECTION_NAME", "rag_documents"
         )
         self.embedding_model_name = embedding_model or os.getenv(
-            "EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2"
+            "OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"
         )
 
-        # Initialize ChromaDB client
-        self.client = chromadb.PersistentClient(path="./chroma_db")
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "OPENAI_API_KEY is required for embeddings. "
+                "Please set OPENAI_API_KEY in your .env file."
+            )
 
-        # Load embedding model
-        print(f"Loading embedding model: {self.embedding_model_name}")
-        self.embedding_model = SentenceTransformer(self.embedding_model_name)
-
-        # Get or create collection
-        self.collection = self.client.get_or_create_collection(
-            name=self.collection_name,
-            metadata={"description": "RAG document collection"},
+        # Initialize embedding client used during ingestion and retrieval.
+        print(f"Loading OpenAI embedding model: {self.embedding_model_name}")
+        self.embedding_model = OpenAIEmbeddings(
+            model=self.embedding_model_name,
+            api_key=api_key,
         )
 
-        print(f"Vector database initialized with collection: {self.collection_name}")
+        # In-memory index storage (documents + metadata + vectors).
+        self._documents: List[str] = []
+        self._metadatas: List[Dict[str, Any]] = []
+        self._ids: List[str] = []
+        self._embeddings: np.ndarray = np.empty((0, 0), dtype=np.float32)
 
-    def chunk_text(self, text: str, chunk_size: int = 500) -> List[str]:
+        print(f"Vector database initialized (in-memory): {self.collection_name}")
+
+    def chunk_text(self, text: str, chunk_size: int = 500, chunk_overlap: int = 50) -> List[str]:
         """
-        Simple text chunking by splitting on spaces and grouping into chunks.
+        Split text into smaller chunks using RecursiveCharacterTextSplitter.
 
         Args:
             text: Input text to chunk
             chunk_size: Approximate number of characters per chunk
+            chunk_overlap: Number of overlapping characters between chunks
 
         Returns:
             List of text chunks
         """
-        # TODO: Implement text chunking logic
-        # You have several options for chunking text - choose one or experiment with multiple:
-        #
-        # OPTION 1: Simple word-based splitting
-        #   - Split text by spaces and group words into chunks of ~chunk_size characters
-        #   - Keep track of current chunk length and start new chunks when needed
-        #
-        # OPTION 2: Use LangChain's RecursiveCharacterTextSplitter
-        #   - from langchain_text_splitters import RecursiveCharacterTextSplitter
-        #   - Automatically handles sentence boundaries and preserves context better
-        #
-        # OPTION 3: Semantic splitting (advanced)
-        #   - Split by sentences using nltk or spacy
-        #   - Group semantically related sentences together
-        #   - Consider paragraph boundaries and document structure
-        #
-        # Feel free to try different approaches and see what works best!
+        from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-        chunks = []
-        # Your implementation here
-
+        # Recursive splitter preserves semantic boundaries better than naive fixed slicing.
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            separators=["\n\n", "\n", ". ", " ", ""],
+        )
+        chunks = splitter.split_text(text)
         return chunks
 
     def add_documents(self, documents: List) -> None:
@@ -78,20 +74,50 @@ class VectorDB:
         Add documents to the vector database.
 
         Args:
-            documents: List of documents
+            documents: List of documents (dicts with 'content' and optional 'metadata')
         """
-        # TODO: Implement document ingestion logic
-        # HINT: Loop through each document in the documents list
-        # HINT: Extract 'content' and 'metadata' from each document dict
-        # HINT: Use self.chunk_text() to split each document into chunks
-        # HINT: Create unique IDs for each chunk (e.g., "doc_0_chunk_0")
-        # HINT: Use self.embedding_model.encode() to create embeddings for all chunks
-        # HINT: Store the embeddings, documents, metadata, and IDs in your vector database
-        # HINT: Print progress messages to inform the user
-
         print(f"Processing {len(documents)} documents...")
-        # Your implementation here
-        print("Documents added to vector database")
+
+        all_chunks = []
+        all_ids = []
+        all_metadatas = []
+
+        for doc_idx, doc in enumerate(documents):
+            # Support either structured dict input or raw text input.
+            content = doc.get("content", "") if isinstance(doc, dict) else str(doc)
+            metadata = doc.get("metadata", {}) if isinstance(doc, dict) else {}
+
+            chunks = self.chunk_text(content)
+            print(f"  Document {doc_idx + 1}: split into {len(chunks)} chunks")
+
+            for chunk_idx, chunk in enumerate(chunks):
+                chunk_id = f"doc_{doc_idx}_chunk_{chunk_idx}"
+                all_chunks.append(chunk)
+                all_ids.append(chunk_id)
+                # Store serializable metadata only.
+                all_metadatas.append({
+                    "doc_index": doc_idx,
+                    "chunk_index": chunk_idx,
+                    **{k: str(v) for k, v in metadata.items()},
+                })
+
+        if all_chunks:
+            print(f"  Generating embeddings for {len(all_chunks)} chunks...")
+            embeddings = np.array(
+                self.embedding_model.embed_documents(all_chunks),
+                dtype=np.float32,
+            )
+
+            if self._embeddings.size == 0:
+                self._embeddings = embeddings
+            else:
+                self._embeddings = np.vstack([self._embeddings, embeddings])
+
+            self._documents.extend(all_chunks)
+            self._metadatas.extend(all_metadatas)
+            self._ids.extend(all_ids)
+
+        print(f"Documents added to vector database ({len(all_chunks)} chunks total)")
 
     def search(self, query: str, n_results: int = 5) -> Dict[str, Any]:
         """
@@ -104,17 +130,35 @@ class VectorDB:
         Returns:
             Dictionary containing search results with keys: 'documents', 'metadatas', 'distances', 'ids'
         """
-        # TODO: Implement similarity search logic
-        # HINT: Use self.embedding_model.encode([query]) to create query embedding
-        # HINT: Convert the embedding to appropriate format for your vector database
-        # HINT: Use your vector database's search/query method with the query embedding and n_results
-        # HINT: Return a dictionary with keys: 'documents', 'metadatas', 'distances', 'ids'
-        # HINT: Handle the case where results might be empty
+        count = len(self._documents)
+        if count == 0:
+            return {"documents": [[]], "metadatas": [[]], "distances": [[]], "ids": [[]]}
 
-        # Your implementation here
+        n_results = min(n_results, count)
+
+        # Embed user query with same model space as document vectors.
+        query_embedding = np.array(
+            self.embedding_model.embed_query(query),
+            dtype=np.float32,
+        )
+
+        # Cosine similarity
+        doc_norms = np.linalg.norm(self._embeddings, axis=1) + 1e-12
+        query_norm = np.linalg.norm(query_embedding) + 1e-12
+        similarities = (self._embeddings @ query_embedding) / (doc_norms * query_norm)
+
+        # Get top-k indices by similarity (descending)
+        top_indices = np.argsort(similarities)[::-1][:n_results]
+
+        top_docs = [self._documents[i] for i in top_indices]
+        top_metas = [self._metadatas[i] for i in top_indices]
+        top_ids = [self._ids[i] for i in top_indices]
+        # Convert similarity to distance for compatibility with vector DB style output.
+        top_distances = [float(1.0 - similarities[i]) for i in top_indices]
+
         return {
-            "documents": [],
-            "metadatas": [],
-            "distances": [],
-            "ids": [],
+            "documents": [top_docs],
+            "metadatas": [top_metas],
+            "distances": [top_distances],
+            "ids": [top_ids],
         }

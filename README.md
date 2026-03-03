@@ -1,410 +1,200 @@
-# RAG-Based AI Assistant - AAIDC Project 1 Template
+# RAG Question-Answering Assistant (Final Submission)
 
-## 🤖 What is this?
+This project implements a **Retrieval-Augmented Generation (RAG)** assistant that answers questions using a custom local document set. The core deliverable is a working pipeline that performs document ingestion, chunking, embedding, retrieval, and grounded response generation with OpenAI models.
 
-This is a **learning template** for building a RAG (Retrieval-Augmented Generation) AI assistant. RAG systems combine document search with AI chat - they can answer questions about your specific documents by finding relevant information and using it to generate responses.
+## 1) Purpose and Objectives
 
-**Think of it as:** ChatGPT that knows about YOUR documents and can answer questions about them.
+### Purpose
+Build and evaluate a simple, reproducible RAG assistant that can answer user questions based only on provided documents in the data folder.
 
-## 🎯 What you'll build
+### Specific Objectives
+1. Ingest local text documents from a custom corpus.
+2. Split documents into retrieval-friendly chunks.
+3. Create vector embeddings for chunks.
+4. Retrieve top-k relevant chunks for each query.
+5. Generate context-grounded answers with an LLM.
+6. Provide a minimal CLI interface for interactive testing.
+7. Return answer sources for transparency.
 
-By completing this project, you'll have an AI assistant that can:
+## 2) Intended Audience and Use Case
 
-- 📄 **Load your documents** (PDFs, text files, etc.)
-- 🔍 **Search through them** to find relevant information
-- 💬 **Answer questions** using the information it found
-- 🧠 **Combine multiple sources** to give comprehensive answers
+### Target Audience
+- Students learning RAG fundamentals.
+- Early-stage AI practitioners building document QA systems.
+- Developers who need a small, understandable baseline before production-scale deployment.
 
-
-Welcome to your RAG (Retrieval-Augmented Generation) project! This repository provides a **template** that you need to complete. The framework is set up, but the core functionality is missing - that's your job to implement!
-
-## 🎯 What You Need to Build
-
-You will implement a complete RAG system that can:
-
-- Load and chunk documents from the `data/` directory
-- Create embeddings and store them in a vector database
-- Search for relevant context based on user queries
-- Generate responses using retrieved context and an LLM
-
-
-## 📝 Implementation Steps
-
-The project requires implementing 7 main steps:
-
-1. **Prepare Your Documents** - Add your own documents to the data directory
-2. **Document Loading** - Load documents from files into the system
-3. **Text Chunking** - Split documents into smaller, searchable chunks
-4. **Document Ingestion** - Process and store documents in the vector database  
-5. **Similarity Search** - Find relevant documents based on queries
-6. **RAG Prompt Template** - Design effective prompts for the LLM
-7. **RAG Query Pipeline** - Complete query-response pipeline using retrieved context
-
----
-
-### Step 1: Prepare Your Documents
-
-**Replace the sample documents with your own content**
-
-The `data/` directory contains sample files on various topics. Replace these with documents relevant to your domain:
-
-```
-data/
-├── your_topic_1.txt
-├── your_topic_2.txt
-└── your_topic_3.txt
-```
-
-Each file should contain text content you want your RAG system to search through.
-
----
-
-### Step 2: Implement Document Loading
-
-**Location:** `src/app.py`
-
-```python
-def load_documents() -> List[str]:
-    """
-    Load documents for demonstration.
-
-    Returns:
-        List of sample documents
-    """
-    results = []
-    # TODO: Implement document loading
-    # HINT: Read the documents from the data directory
-    # HINT: Return a list of documents
-    # HINT: Your implementation depends on the type of documents you are using (.txt, .pdf, etc.)
-
-    # Your implementation here
-    return results
-```
-
-**What you need to do:**
-
-- Read files from the `data/` directory
-- Load the content of each file into memory
-- Return a list of document dictionaries with content and metadata
-- You implementation should handle the type of files you are using (text, pdf, etc)
-
-**Key considerations:**
-
-- Use `os.listdir()` or `glob.glob()` to find files in the data directory
-- Read file contents using appropriate encoding (usually 'utf-8')
-- Create document dictionaries with 'content' and 'metadata' fields
-- Handle errors gracefully (missing files, encoding issues, etc.)
-
----
-
-### Step 3: Implement Text Chunking
-
-**Location:** `src/vectordb.py`
-
-```python
-def chunk_text(self, text: str, chunk_size: int = 500) -> List[str]:
-    """
-    Split text into smaller chunks for better retrieval.
-  
-    Args:
-        text: Input text to chunk
-        chunk_size: Approximate number of characters per chunk
-  
-    Returns:
-        List of text chunks
-    """
-    # TODO: Your implementation here
-```
-
-**What you need to do:**
-
-- Choose a chunking strategy (word-based, sentence-based, or use LangChain's text splitters)
-- Split the input text into manageable chunks
-- Return a list of text strings
-
-**Hint:** You have multiple options - start simple with word-based splitting or explore LangChain's `RecursiveCharacterTextSplitter`.
-
----
-
-### Step 4: Implement Document Ingestion
-
-**Location:** `src/vectordb.py`
-
-```python
-def add_documents(self, documents: List[Dict[str, Any]]) -> None:
-    """
-    Process documents and add them to the vector database.
-  
-    Args:
-        documents: List of documents with 'content' and optional 'metadata'
-    """
-    # TODO: Your implementation here
-```
-
-**What you need to do:**
-
-- Loop through the documents list
-- Extract content and metadata from each document
-- Use your `chunk_text()` method to split documents
-- Create embeddings using `self.embedding_model.encode()`
-- Store everything in ChromaDB using `self.collection.add()`
-
-**Key components:**
-
-- Chunk each document's content
-- Generate unique IDs for each chunk
-- Create embeddings for all chunks
-- Store in the vector database
-
----
-
-### Step 5: Implement Similarity Search
-
-**Location:** `src/vectordb.py`
-
-```python
-def search(self, query: str, n_results: int = 5) -> Dict[str, Any]:
-    """
-    Find documents similar to the query.
-  
-    Args:
-        query: Search query
-        n_results: Number of results to return
-  
-    Returns:
-        Dictionary with search results
-    """
-    # TODO: Your implementation here
-```
-
-**What you need to do:**
-
-- Create an embedding for the query using `self.embedding_model.encode()`
-- Search the ChromaDB collection using `self.collection.query()`
-- Return results in the expected format with keys: `documents`, `metadatas`, `distances`, `ids`
-
----
-
-### Step 6: Implement RAG Prompt Template
-
-**Location:** `src/app.py`
-
-```python
-# Create RAG prompt template
-# TODO: Implement your RAG prompt template
-# HINT: Use ChatPromptTemplate.from_template() with a template string
-# HINT: Your template should include placeholders for {context} and {question}
-# HINT: Design your prompt to effectively use retrieved context to answer questions
-self.prompt_template = None  # Your implementation here
-```
-
-**What you need to do:**
-
-- Design a prompt template that effectively combines retrieved context with user questions
-- Use `ChatPromptTemplate.from_template()` to create the template
-- Include placeholders for `{context}` (retrieved documents) and `{question}` (user query)
-- Consider how to instruct the LLM to use the context appropriately
-- Handle cases where the context might not contain relevant information
-
-**Key considerations:**
-
-- Clear instructions for the AI on how to use the retrieved context
-- Guidance on what to do when context is insufficient or irrelevant
-- Consistent formatting that works well with your chosen LLM
-- Balance between being specific enough to be helpful and flexible enough to handle various queries
-
----
-
-### Step 7: Implement RAG Query Pipeline
-
-**Location:** `src/app.py`
-
-```python
-def query(self, question: str, n_results: int = 3) -> Dict[str, Any]:
-    """
-    Answer questions using retrieved context.
-  
-    Args:
-        question: User's question
-        n_results: Number of context chunks to retrieve
-  
-    Returns:
-        Dictionary with answer and context information
-    """
-    # TODO: Your implementation here
-```
-
-**What you need to do:**
-
-- Use `self.vector_db.search()` to find relevant context
-- Combine retrieved chunks into a context string
-- Use `self.chain.invoke()` to generate a response
-- Return a dictionary with the answer and metadata
-
-**The RAG pipeline:**
-
-1. Search for relevant chunks
-2. Combine chunks into context
-3. Generate response using LLM + context
-4. Return structured results
-
-
----
-
-## 🧪 Testing Your Implementation
-
-### Test Individual Components
-
-1. **Test chunking:**
-
-   ```python
-   from src.vectordb import VectorDB
-   vdb = VectorDB()
-   chunks = vdb.chunk_text("Your test text here...")
-   print(f"Created {len(chunks)} chunks")
-   ```
-2. **Test document loading:**
-
-   ```python
-   documents = [{"content": "Test document", "metadata": {"title": "Test"}}]
-   vdb.add_documents(documents)
-   ```
-3. **Test search:**
-
-   ```python
-   results = vdb.search("your test query")
-   print(f"Found {len(results['documents'])} results")
-   ```
-
-### Test Full System
-
-Once implemented, run:
-
-```bash
-python src/app.py
-```
-
-Try these example questions:
-
-- "What is [topic from your documents]?"
-- "Explain [concept from your documents]"
-- "How does [process from your documents] work?"
-
----
-
-## 🔧 Implementation Freedom
-
-**Important:** This template uses specific packages (ChromaDB, LangChain, HuggingFace Transformers) and approaches, but **you are completely free to use whatever you prefer!**
-
-### Alternative Options You Can Choose:
-
-**Vector Databases:**
-- FAISS (Facebook AI Similarity Search)
-- Pinecone
-- Weaviate
-- Qdrant
-- Or any other vector store you prefer
-
-**LLM Frameworks:**
-- Direct API calls (OpenAI, Anthropic, etc.)
-- Ollama for local models
-- Hugging Face Transformers
-- LlamaIndex instead of LangChain
-
-**Embedding Models:**
-- OpenAI embeddings (ada-002)
-- Cohere embeddings
-- Any Hugging Face model
-- Local embedding models
-
-**Text Processing:**
-- Custom chunking logic
-- spaCy for advanced NLP
-- NLTK for text processing
-- Your own parsing methods
-
----
-
-## 🚀 Setup Instructions
+### Primary Use Case
+Ask domain questions over a curated document collection and get grounded answers with source references.
 
 ### Prerequisites
+- Python 3.10+ (tested in this workspace with Python 3.14).
+- Basic Python and command-line familiarity.
+- OpenAI API key.
 
-Before starting, make sure you have:
+## 3) Problem Definition
 
-- Python 3.8 or higher installed
-- An API key from **one** of these providers:
-  - [OpenAI](https://platform.openai.com/api-keys) (most popular)
-  - [Groq](https://console.groq.com/keys) (free tier available)
-  - [Google AI](https://aistudio.google.com/app/apikey) (competitive pricing)
+Generic LLM responses can be inaccurate for niche knowledge domains or private documents. This project addresses that limitation by retrieving relevant context from user-provided files before generation, reducing hallucination risk and increasing answer relevance for the selected corpus.
 
-### Quick Setup
+## 4) Scope, Assumptions, and Boundaries
 
-1. **Clone and install dependencies:**
+### In Scope
+- Text-based document QA over local files.
+- Retrieval using dense embeddings and cosine similarity.
+- CLI-based interaction.
 
-   ```bash
-   git clone [your-repo-url]
-   cd rt-aaidc-project1-template
-   pip install -r requirements.txt
-   ```
+### Out of Scope
+- Web app/UI deployment.
+- Multi-user session management.
+- Fine-tuning custom LLM weights.
+- Large-scale distributed indexing.
 
-2. **Configure your API key:**
+### Assumptions
+- Input files are valid UTF-8 text.
+- The OpenAI API key is available at runtime.
+- Document volume is small-to-medium and fits memory.
 
-   ```bash
-   # Create environment file (choose the method that works on your system)
-   cp .env.example .env    # Linux/Mac
-   copy .env.example .env  # Windows
-   ```
+## 5) Dataset Sources and Characteristics
 
-   Edit `.env` and add your API key:
+### Data Source
+All documents are local files in the data directory:
+- artificial_intelligence.txt
+- biotechnology.txt
+- climate_science.txt
+- quantum_computing.txt
+- sample_documents.txt
+- space_exploration.txt
+- sustainable_energy.txt
 
-   ```
-   OPENAI_API_KEY=your_key_here
-   # OR
-   GROQ_API_KEY=your_key_here  
-   # OR
-   GOOGLE_API_KEY=your_key_here
-   ```
+### Basic Dataset Stats
+- Number of source documents: 7
+- File format: `.txt`
+- Domain coverage: AI, biotech, climate, quantum, space, sustainability
+
+## 6) Methodology
+
+The implemented pipeline follows a standard RAG flow:
+
+1. **Load documents**  
+    Read supported files from the data directory.
+
+2. **Chunk documents**  
+    Use `RecursiveCharacterTextSplitter` with overlap to preserve local context.
+
+3. **Embed chunks**  
+    Generate OpenAI embeddings (`text-embedding-3-small` by default).
+
+4. **Index in memory**  
+    Store chunk text, metadata, IDs, and vectors.
+
+5. **Retrieve top-k chunks**  
+    Compute cosine similarity between query vector and indexed vectors.
+
+6. **Prompt + generate**  
+    Build a grounded prompt with retrieved context and generate an answer with `gpt-4o-mini` (default).
+
+7. **Return answer + sources**  
+    Output answer text, context chunks, and source filenames.
+
+## 7) Implementation Details
+
+### Main Components
+- src/app.py  
+  `RAGAssistant` orchestration (`load_documents()`, `load_and_ingest()`, `query()`).
+
+- src/vectordb.py  
+  In-memory vector index (`chunk_text()`, `add_documents()`, `search()`).
+
+- demo.py  
+  Minimal CLI for sample queries and interactive Q&A.
+
+### Tools/Frameworks
+- LangChain core abstractions (prompting/output parsing)
+- LangChain OpenAI integrations
+- OpenAI embeddings and chat model
+- NumPy for vector math
+- Python dotenv for environment config
+
+### VectorDB Design and Retrieval Logic
+This `VectorDB` is a simple in-memory vector store that enables semantic retrieval for a RAG system. During ingestion, each document is split into smaller chunks using a recursive character-based text splitter. Chunking improves retrieval precision by ensuring embeddings represent focused, semantically coherent text instead of entire large documents. A small chunk overlap is used to preserve context across boundaries so important information isn’t lost between adjacent segments.
+
+Each chunk is converted into a dense vector using OpenAI embeddings and stored in a NumPy matrix along with its metadata. At query time, the user question is embedded into the same vector space. The system then computes cosine similarity between the query vector and all stored document vectors. Cosine similarity is used because it measures semantic direction similarity independent of vector magnitude, making it well-suited for text embeddings.
+
+The top-k most similar chunks are returned and passed to the LLM as grounded context, enabling accurate Retrieval-Augmented Generation.
+
+## 8) Evaluation Framework and Verification
+
+### Evaluation Strategy
+This submission uses functional validation and qualitative retrieval checks:
+
+1. **Ingestion verification**: confirm all files load and chunk successfully.
+2. **Retrieval verification**: confirm top-k chunks are semantically relevant to test queries.
+3. **Grounding verification**: confirm generated answers align with retrieved context.
+4. **Source transparency**: confirm source filenames are returned with responses.
+
+### Example Verification Queries
+- “What is machine learning?”
+- “How does deep learning work?”
+- “What are key AI ethics concerns?”
+
+## 9) Results Summary
+
+Observed behavior in local runs:
+- Documents are loaded and indexed successfully.
+- Retrieval returns relevant chunks for sample domain questions.
+- Answers are coherent and grounded in the corpus.
+- Source file names are returned for traceability.
+
+## 10) Limitations and Trade-offs
+
+1. **In-memory index only**  
+    Not designed for very large corpora or persistent multi-session serving.
+
+2. **No reranker**  
+    Retrieval quality depends on embedding similarity alone.
+
+3. **No quantitative benchmark**  
+    Evaluation is currently functional + qualitative, not a full benchmark suite.
+
+4. **API dependency**  
+    Requires OpenAI access at runtime.
+
+## 11) Deployment and Maintenance Considerations
+
+### Deployment
+- Suitable for local execution as a CLI tool.
+- For production: add persistent vector storage, caching, auth, monitoring, and API rate-limit handling.
+
+### Monitoring Suggestions
+- Log query latency and retrieval latency.
+- Track top-k source distribution.
+- Track user feedback on answer usefulness.
+
+### Maintenance
+- Refresh corpus periodically.
+- Re-index after significant data updates.
+- Review prompt and retrieval settings based on observed failure cases.
+
+## 12) Reproducibility and Setup
+
+### Environment Variables
+Create `.env` with:
+
+OPENAI_API_KEY=your_key_here
+OPENAI_MODEL=gpt-4o-mini
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+
+### Install
+Use the project environment and install dependencies from requirements file.
+
+### Run
+From project root:
+
+python demo.py
+
+Then test predefined and interactive questions.
+
+## 13) Why This Work Matters
+
+This project provides a compact, understandable RAG baseline for document-grounded QA. It is practical for learning and small-domain assistant prototypes, and it establishes a clean foundation for future extensions (persistent vector DB, reranking, quantitative evaluation, and service deployment).
 
 
----
-
-## 📁 Project Structure
-
-```
-rt-aaidc-project1-template/
-├── src/
-│   ├── app.py           # Main RAG application (implement Steps 2, 6-7)
-│   └── vectordb.py      # Vector database wrapper (implement Steps 3-5)
-├── data/               # Replace with your documents (Step 1)
-│   ├── *.txt          # Your text files here
-├── requirements.txt    # All dependencies included
-├── .env.example       # Environment template
-└── README.md          # This guide
-```
-
----
-
-## 🎓 Learning Objectives
-
-By completing this project, you will:
-
-- ✅ Understand RAG architecture and data flow
-- ✅ Implement text chunking strategies
-- ✅ Work with vector databases and embeddings
-- ✅ Build LLM-powered applications with LangChain
-- ✅ Handle multiple API providers
-- ✅ Create production-ready AI applications
-
----
-
-## 🏁 Success Criteria
-
-Your implementation is complete when:
-
-1. ✅ You can load your own documents
-2. ✅ The system chunks and embeds documents
-3. ✅ Search returns relevant results
-4. ✅ The RAG system generates contextual answers
-5. ✅ You can ask questions and get meaningful responses
-
-**Good luck building your RAG system! 🚀**
