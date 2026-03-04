@@ -1,12 +1,22 @@
-# Environments
+# -----------------------------
+# Environment variables / secrets
+# -----------------------------
+.env
+.env.*
+!.env.example
+
+# -----------------------------
+# Python virtual environments
+# -----------------------------
 venv/
 .venv/
+.venv-*/
+.venv*/
+env/
 
-
-# Environment variables
-.env
-
-# Python
+# -----------------------------
+# Python cache / build artifacts
+# -----------------------------
 __pycache__/
 *.py[cod]
 *$py.class
@@ -29,17 +39,29 @@ wheels/
 *.egg
 MANIFEST
 
-# ChromaDB
-chroma_db/
+# Testing / tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
-# IDE
+# -----------------------------
+# Project-generated artifacts
+# -----------------------------
+chroma_db/
+outputs/*.md
+
+# -----------------------------
+# IDE / editor
+# -----------------------------
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OS
+# -----------------------------
+# OS files
+# -----------------------------
 .DS_Store
 Thumbs.db
-
-lesson.md

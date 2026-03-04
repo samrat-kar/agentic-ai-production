@@ -13,10 +13,10 @@ def main():
         "What are key AI ethics concerns?",
     ]
 
-    # Run a few predefined questions to show baseline behavior.
-    print("\nExample queries:\n")
+    # Run a few predefined questions to show tool-calling agent behavior.
+    print("\nExample queries (tool-calling agent):\n")
     for q in example_questions:
-        result = assistant.query(q)
+        result = assistant.query_with_agent(q)
         print(f"Q: {q}")
         print(f"A: {result['answer']}")
         print(f"Sources: {', '.join(result['sources'])}\n")
@@ -27,7 +27,7 @@ def main():
         question = input("\nYou: ").strip()
         if not question or question.lower() in {"quit", "exit", "q"}:
             break
-        result = assistant.query(question)
+        result = assistant.query_with_agent(question)
         print(f"Assistant: {result['answer']}")
         print(f"Sources: {', '.join(result['sources'])}")
 

@@ -3,9 +3,10 @@ import os
 from pathlib import Path
 from typing import Dict, Any, List
 from dotenv import load_dotenv
+from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.tools import tool
+from pydantic import SecretStr
 from .vectordb import VectorDB
 
 # Load environment variables
@@ -16,29 +17,17 @@ class RAGAssistant:
     """Question-answering assistant powered by Retrieval-Augmented Generation."""
 
     def __init__(self):
-        """Initialize the RAG assistant components (LLM, prompt chain, vector store)."""
+        """Initialize the RAG assistant components (LLM, agent, vector store)."""
         # LLM used for final answer generation.
         self.llm = self._initialize_llm()
-
-        # Prompt template for grounded answering.
-        # The model is instructed to rely on retrieved context and avoid hallucinations.
-        self.prompt_template = ChatPromptTemplate.from_template(
-            """You are a helpful assistant. Use only the provided context to answer the question.
-If the context does not contain enough information, say so honestly rather than making up an answer.
-
-Context:
-{context}
-
-Question: {question}
-
-Provide a clear, concise answer based on the context provided."""
-        )
-
-    # End-to-end generation chain: prompt -> model -> plain string output.
-        self.chain = self.prompt_template | self.llm | StrOutputParser()
+        self._agent_n_results = 3
 
     # Vector index used by the retriever step.
         self.vector_db = VectorDB()
+
+    # Tool-calling agent setup.
+        self.tools = self._build_tools()
+        self.agent = self._initialize_agent()
         print("RAG Assistant initialized successfully")
 
     # ------------------------------------------------------------------
@@ -95,30 +84,36 @@ Provide a clear, concise answer based on the context provided."""
     # RAG query
     # ------------------------------------------------------------------
 
-    def query(self, question: str, n_results: int = 3) -> Dict[str, Any]:
+    def query_with_agent(self, question: str, n_results: int = 3) -> Dict[str, Any]:
         """
-        Answer a question using retrieved context (RAG).
+        Answer a question using a tool-calling agent.
 
-        Args:
-            question: The user's question
-            n_results: Number of context chunks to retrieve
-
-        Returns:
-            Dict with answer text, retrieved chunks, and source file names
+        The agent can call the retrieval tool when needed before writing a response.
         """
-        # 1. Retrieve relevant chunks
+        self._agent_n_results = n_results
+        result = self.agent.invoke({
+            "messages": [
+                {"role": "user", "content": question},
+            ]
+        })
+
+        answer = ""
+        messages = result.get("messages", []) if isinstance(result, dict) else []
+        if messages:
+            last_message = messages[-1]
+            answer = getattr(last_message, "content", "")
+            if isinstance(answer, list):
+                text_parts = []
+                for part in answer:
+                    if isinstance(part, dict) and part.get("type") == "text":
+                        text_parts.append(part.get("text", ""))
+                    elif isinstance(part, str):
+                        text_parts.append(part)
+                answer = "\n".join([p for p in text_parts if p]).strip()
+
         search_results = self.vector_db.search(question, n_results=n_results)
-
         chunks = search_results.get("documents", [[]])[0]
         metadatas = search_results.get("metadatas", [[]])[0]
-
-        # 2. Build context string
-        context = "\n\n---\n\n".join(chunks) if chunks else "No relevant context found."
-
-        # 3. Generate answer via LLM chain
-        answer = self.chain.invoke({"context": context, "question": question})
-
-        # 4. Collect unique source file names for transparency/citations
         sources = list({m.get("source", "unknown") for m in metadatas}) if metadatas else []
 
         return {
@@ -126,7 +121,41 @@ Provide a clear, concise answer based on the context provided."""
             "answer": answer,
             "context_chunks": chunks,
             "sources": sources,
+            "mode": "agent_tool_calling",
         }
+
+    def _build_tools(self):
+        """Create tools available to the agent."""
+
+        @tool
+        def retrieve_context(question: str) -> str:
+            """Retrieve top relevant document chunks for a user question."""
+            search_results = self.vector_db.search(question, n_results=self._agent_n_results)
+            chunks = search_results.get("documents", [[]])[0]
+            metadatas = search_results.get("metadatas", [[]])[0]
+
+            if not chunks:
+                return "No relevant context found."
+
+            lines = []
+            for idx, (chunk, metadata) in enumerate(zip(chunks, metadatas), start=1):
+                source = metadata.get("source", "unknown")
+                lines.append(f"[{idx}] Source: {source}\n{chunk}")
+
+            return "\n\n---\n\n".join(lines)
+
+        return [retrieve_context]
+
+    def _initialize_agent(self):
+        """Create the tool-calling agent executor."""
+        return create_agent(
+            model=self.llm,
+            tools=self.tools,
+            system_prompt=(
+                "You are a helpful assistant. Use tools when helpful to ground your answer in retrieved context. "
+                "If context is insufficient, say so clearly instead of making up facts."
+            ),
+        )
 
     def _initialize_llm(self):
         """Initialize the chat model using environment-based OpenAI configuration."""
@@ -136,14 +165,14 @@ Provide a clear, concise answer based on the context provided."""
 
         model_name = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
         print(f"Using OpenAI model: {model_name}")
-        return ChatOpenAI(api_key=api_key, model=model_name, temperature=0.2)
+        return ChatOpenAI(api_key=SecretStr(api_key), model=model_name, temperature=0.2)
 
 
 def main():
     """Quick smoke test: ingest docs and answer one sample question."""
     assistant = RAGAssistant()
     assistant.load_and_ingest("./data")
-    result = assistant.query("What is machine learning?")
+    result = assistant.query_with_agent("What is machine learning?")
     print(result["answer"])
 
 
