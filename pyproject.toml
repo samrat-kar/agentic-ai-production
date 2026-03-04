@@ -1,0 +1,16 @@
+[project]
+name = "rag-research-assistant"
+version = "1.0.0"
+description = "Multi-Agent RAG Research Assistant powered by CrewAI"
+requires-python = ">=3.12"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"

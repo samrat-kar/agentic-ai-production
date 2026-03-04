@@ -1,5 +1,19 @@
+# Copyright (c) 2026 Samrat Kar
+# Licensed under CC BY-NC-SA 4.0 — see LICENSE for details.
+
+"""Custom CrewAI tools for the RAG research assistant.
+
+Provides:
+- ``LocalRAGSearchTool`` — semantic search over local knowledge-base files.
+- ``CalculatorTool`` — safe arithmetic expression evaluator.
+- ``SaveReportTool`` — writes the final report to ``./outputs/``.
+
+Also includes helpers for loading documents and building the vector DB.
+"""
+
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 from typing import Any, Dict, List, Type
@@ -8,6 +22,8 @@ from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 
 from .vectordb import VectorDB
+
+logger = logging.getLogger(__name__)
 
 
 # -----------------------------
@@ -40,7 +56,7 @@ def build_vectordb(data_dir: str = "data") -> VectorDB:
     if docs:
         vdb.add_documents(docs)
     else:
-        print(f"⚠ No docs found in {data_dir}. Add files to improve RAG answers.")
+        logger.warning("No docs found in %s. Add files to improve RAG answers.", data_dir)
     return vdb
 
 

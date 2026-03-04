@@ -1,7 +1,20 @@
+# Copyright (c) 2026 Samrat Kar
+# Licensed under CC BY-NC-SA 4.0 — see LICENSE for details.
+
+"""In-memory vector database with OpenAI embeddings.
+
+Stores document chunks as numpy arrays and retrieves the top-k most
+relevant chunks via cosine similarity.
+"""
+
+import logging
 import os
 from typing import List, Dict, Any
+
 import numpy as np
 from langchain_openai import OpenAIEmbeddings
+
+logger = logging.getLogger(__name__)
 
 
 class VectorDB:
@@ -24,7 +37,7 @@ class VectorDB:
                 "Please set OPENAI_API_KEY in your .env file."
             )
 
-        print(f"Loading OpenAI embedding model: {self.embedding_model_name}")
+        logger.info("Loading OpenAI embedding model: %s", self.embedding_model_name)
         self.embedding_model = OpenAIEmbeddings(
             model=self.embedding_model_name,
             api_key=api_key,
@@ -35,7 +48,7 @@ class VectorDB:
         self._ids: List[str] = []
         self._embeddings: np.ndarray = np.empty((0, 0), dtype=np.float32)
 
-        print(f"Vector database initialized (in-memory): {self.collection_name}")
+        logger.info("Vector database initialized (in-memory): %s", self.collection_name)
 
     def chunk_text(self, text: str, chunk_size: int = 500, chunk_overlap: int = 50) -> List[str]:
         from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -48,7 +61,7 @@ class VectorDB:
         return splitter.split_text(text)
 
     def add_documents(self, documents: List) -> None:
-        print(f"Processing {len(documents)} documents...")
+        logger.info("Processing %d documents...", len(documents))
 
         all_chunks = []
         all_ids = []
@@ -59,7 +72,7 @@ class VectorDB:
             metadata = doc.get("metadata", {}) if isinstance(doc, dict) else {}
 
             chunks = self.chunk_text(content)
-            print(f"  Document {doc_idx + 1}: split into {len(chunks)} chunks")
+            logger.info("  Document %d: split into %d chunks", doc_idx + 1, len(chunks))
 
             for chunk_idx, chunk in enumerate(chunks):
                 chunk_id = f"doc_{doc_idx}_chunk_{chunk_idx}"
@@ -72,7 +85,7 @@ class VectorDB:
                 })
 
         if all_chunks:
-            print(f"  Generating embeddings for {len(all_chunks)} chunks...")
+            logger.info("  Generating embeddings for %d chunks...", len(all_chunks))
             embeddings = np.array(
                 self.embedding_model.embed_documents(all_chunks),
                 dtype=np.float32,
@@ -87,7 +100,7 @@ class VectorDB:
             self._metadatas.extend(all_metadatas)
             self._ids.extend(all_ids)
 
-        print(f"Documents added to vector database ({len(all_chunks)} chunks total)")
+        logger.info("Documents added to vector database (%d chunks total)", len(all_chunks))
 
     def search(self, query: str, n_results: int = 5) -> Dict[str, Any]:
         count = len(self._documents)

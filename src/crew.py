@@ -1,9 +1,22 @@
+# Copyright (c) 2026 Samrat Kar
+# Licensed under CC BY-NC-SA 4.0 — see LICENSE for details.
+
+"""CrewAI agent, task, and crew definitions.
+
+Defines three agents (Research, Analyst, Writer), their tasks, and the
+sequential crew pipeline that orchestrates the full research workflow.
+"""
+
 from __future__ import annotations
 
+import logging
 import os
+
 from dotenv import load_dotenv
 
 from crewai import Agent, Task, Crew, Process
+
+logger = logging.getLogger(__name__)
 from crewai_tools import TavilySearchTool
 from langchain_openai import ChatOpenAI
 

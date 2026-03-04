@@ -1,4 +1,8 @@
+# Copyright (c) 2026 Samrat Kar
+# Licensed under CC BY-NC-SA 4.0 — see LICENSE for details.
+
 """Simple RAG assistant implementation for assignment submission."""
+import logging
 import os
 from pathlib import Path
 from typing import Dict, Any, List
@@ -11,6 +15,8 @@ from .vectordb import VectorDB
 
 # Load environment variables
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 
 class RAGAssistant:
@@ -28,7 +34,7 @@ class RAGAssistant:
     # Tool-calling agent setup.
         self.tools = self._build_tools()
         self.agent = self._initialize_agent()
-        print("RAG Assistant initialized successfully")
+        logger.info("RAG Assistant initialized successfully")
 
     # ------------------------------------------------------------------
     # Document loading & ingestion
@@ -48,7 +54,7 @@ class RAGAssistant:
         dir_path = Path(data_path)
 
         if not dir_path.exists():
-            print(f"⚠ Data directory not found: {data_path}")
+            logger.warning("Data directory not found: %s", data_path)
             return results
 
         for file_path in sorted(dir_path.iterdir()):
@@ -67,9 +73,9 @@ class RAGAssistant:
                     },
                 })
             except Exception as exc:
-                print(f"⚠ Could not read {file_path.name}: {exc}")
+                logger.warning("Could not read %s: %s", file_path.name, exc)
 
-        print(f"Loaded {len(results)} documents from {data_path}")
+        logger.info("Loaded %d documents from %s", len(results), data_path)
         return results
 
     def load_and_ingest(self, data_path: str = "./data") -> None:
@@ -78,7 +84,7 @@ class RAGAssistant:
         if documents:
             self.vector_db.add_documents(documents)
         else:
-            print("No documents to ingest.")
+            logger.info("No documents to ingest.")
 
     # ------------------------------------------------------------------
     # RAG query
@@ -164,7 +170,7 @@ class RAGAssistant:
             raise ValueError("OPENAI_API_KEY is required in .env")
 
         model_name = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-        print(f"Using OpenAI model: {model_name}")
+        logger.info("Using OpenAI model: %s", model_name)
         return ChatOpenAI(api_key=SecretStr(api_key), model=model_name, temperature=0.2)
 
 
