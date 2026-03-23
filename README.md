@@ -1,6 +1,6 @@
 # Multi-Agent RAG Research Assistant (CrewAI)
 
-A multi-agent research assistant that combines live web search with local document retrieval (RAG) to produce grounded, source-cited answers. Three specialized AI agents — Researcher, Analyst, and Writer — collaborate in a sequential pipeline orchestrated by CrewAI, outputting a structured Markdown report.
+A multi-agent research assistant that combines live web search with local document retrieval (RAG) to produce grounded, source-cited answers. Three specialized AI agents — Research Agent, Analyst Agent, and Writer Agent — collaborate in a sequential pipeline orchestrated by CrewAI, outputting a structured Markdown report.
 
 ---
 
@@ -32,16 +32,9 @@ Plain chatbots often **hallucinate** or ignore your internal documents. This pro
 
 **Key features:**
 - Grounded answers that cite **both** web sources (URLs) and local sources (your files)
-- A clear multi-agent workflow (Researcher → Analyst → Writer) orchestrated by **CrewAI**
+- A clear multi-agent workflow (Research Agent → Analyst Agent → Writer Agent) orchestrated by **CrewAI**
 - Four integrated tools: web search, local semantic retrieval, safe math, and report writing
 - Also includes a simpler single-agent demo (`demo.py`) with interactive CLI mode
-
-### Requirements Covered (Assignment Mapping)
-
-| Requirement | How It's Met |
-|---|---|
-| Multi-Agent System (≥ 3 agents) | Research Agent, Analyst Agent, Writer Agent via `CrewAI Process.sequential` |
-| Tool Integration (≥ 3 tools) | TavilySearchTool, LocalRAGSearchTool, CalculatorTool, SaveReportTool |
 
 ---
 

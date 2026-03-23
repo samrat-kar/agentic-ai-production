@@ -1,7 +1,12 @@
 # Copyright (c) 2026 Samrat Kar
 # Licensed under CC BY-NC-SA 4.0 — see LICENSE for details.
 
-"""Simple RAG assistant implementation for assignment submission."""
+"""Single-agent RAG assistant used by demo.py for interactive Q&A.
+
+Provides the RAGAssistant class: a tool-calling LangChain agent backed by
+a local in-memory vector store. Used as the demo/interactive entry point,
+separate from the multi-agent CrewAI pipeline in crew.py.
+"""
 import logging
 import os
 from pathlib import Path

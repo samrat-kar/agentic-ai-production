@@ -1,4 +1,10 @@
 # -----------------------------
+# Publication (platform-only content)
+# -----------------------------
+publication.md
+publication_banner.png
+
+# -----------------------------
 # Environment variables / secrets
 # -----------------------------
 .env

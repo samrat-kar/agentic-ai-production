@@ -38,7 +38,7 @@ The system also includes a simpler **demo mode** (`demo.py`) that runs a single 
 
 ### Step 1 — Clone / Download the Repository
 
-Place the project folder on your machine (e.g., `rt-aaidc-project1-template`).
+Place the project folder on your machine (e.g., `rag-research-assistant`).
 
 ### Step 2 — Create a Virtual Environment
 
@@ -222,7 +222,7 @@ You: _
 ## Project Structure
 
 ```
-rt-aaidc-project1-template/
+rag-research-assistant/
 ├── demo.py                  # Simple single-agent demo with interactive mode
 ├── requirements.txt         # Python dependencies
 ├── .env                     # API keys (you create this)
