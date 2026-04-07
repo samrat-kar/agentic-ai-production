@@ -70,3 +70,4 @@ outputs/*.md
 # -----------------------------
 .DS_Store
 Thumbs.db
+app.log

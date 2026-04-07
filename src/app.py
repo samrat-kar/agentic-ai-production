@@ -12,7 +12,8 @@ import os
 from pathlib import Path
 from typing import Dict, Any, List
 from dotenv import load_dotenv
-from langchain.agents import create_agent
+from langchain.agents import create_tool_calling_agent, AgentExecutor
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
 from pydantic import SecretStr
@@ -102,25 +103,9 @@ class RAGAssistant:
         The agent can call the retrieval tool when needed before writing a response.
         """
         self._agent_n_results = n_results
-        result = self.agent.invoke({
-            "messages": [
-                {"role": "user", "content": question},
-            ]
-        })
+        result = self.agent.invoke({"input": question})
 
-        answer = ""
-        messages = result.get("messages", []) if isinstance(result, dict) else []
-        if messages:
-            last_message = messages[-1]
-            answer = getattr(last_message, "content", "")
-            if isinstance(answer, list):
-                text_parts = []
-                for part in answer:
-                    if isinstance(part, dict) and part.get("type") == "text":
-                        text_parts.append(part.get("text", ""))
-                    elif isinstance(part, str):
-                        text_parts.append(part)
-                answer = "\n".join([p for p in text_parts if p]).strip()
+        answer = result.get("output", "") if isinstance(result, dict) else str(result)
 
         search_results = self.vector_db.search(question, n_results=n_results)
         chunks = search_results.get("documents", [[]])[0]
@@ -157,16 +142,20 @@ class RAGAssistant:
 
         return [retrieve_context]
 
-    def _initialize_agent(self):
+    def _initialize_agent(self) -> AgentExecutor:
         """Create the tool-calling agent executor."""
-        return create_agent(
-            model=self.llm,
-            tools=self.tools,
-            system_prompt=(
-                "You are a helpful assistant. Use tools when helpful to ground your answer in retrieved context. "
-                "If context is insufficient, say so clearly instead of making up facts."
+        prompt = ChatPromptTemplate.from_messages([
+            (
+                "system",
+                "You are a helpful assistant. Use tools when helpful to ground your answer "
+                "in retrieved context. If context is insufficient, say so clearly instead of "
+                "making up facts.",
             ),
-        )
+            ("human", "{input}"),
+            MessagesPlaceholder("agent_scratchpad"),
+        ])
+        agent = create_tool_calling_agent(self.llm, self.tools, prompt)
+        return AgentExecutor(agent=agent, tools=self.tools, verbose=False)
 
     def _initialize_llm(self):
         """Initialize the chat model using environment-based OpenAI configuration."""
