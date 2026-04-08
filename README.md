@@ -1,6 +1,6 @@
-# Multi-Agent RAG Research Assistant (CrewAI)
+# Building a Production-Ready Multi-Agent RAG Assistant with CrewAI, Safety Guardrails, and Streamlit
 
-A multi-agent research assistant that combines live web search with local document retrieval (RAG) to produce grounded, source-cited answers. Three specialized AI agents — Research Agent, Analyst Agent, and Writer Agent — collaborate in a sequential pipeline orchestrated by CrewAI, outputting a structured Markdown report.
+A production-grade multi-agent research assistant that combines live web search with local document retrieval (RAG) to produce grounded, source-cited answers. Three specialised AI agents — Research Agent, Analyst Agent, and Writer Agent — collaborate in a sequential pipeline orchestrated by **CrewAI**. A **Streamlit web UI**, **safety guardrails**, **resilience utilities**, and a **63-test suite** make the system production-ready beyond a basic demo.
 
 ---
 
@@ -41,8 +41,11 @@ Plain chatbots often **hallucinate** or ignore your internal documents. This pro
 **Key features:**
 - Grounded answers that cite **both** web sources (URLs) and local sources (your files)
 - A clear multi-agent workflow (Research Agent → Analyst Agent → Writer Agent) orchestrated by **CrewAI**
+- **Streamlit web UI** with Quick Mode and Full Research modes
+- **Safety guardrails** — input validation, prompt-injection detection, output filtering
+- **Resilience utilities** — exponential-backoff retry, timeout handling, iteration caps
+- **63 automated tests** across unit, integration, and end-to-end levels
 - Four integrated tools: web search, local semantic retrieval, safe math, and report writing
-- Also includes a simpler single-agent demo (`demo.py`) with interactive CLI mode
 
 ---
 
@@ -61,7 +64,8 @@ Plain chatbots often **hallucinate** or ignore your internal documents. This pro
                         │
           ┌─────────────▼─────────────┐
           │  src/resilience.py        │  Retry + timeout +
-          │  with_retry / run_with_timeout │  iteration caps
+          │  with_retry /             │  iteration caps
+          │  run_with_timeout         │
           └─────────────┬─────────────┘
                         │
          ┌──────────────▼──────────────┐
@@ -144,15 +148,10 @@ User Question
 
 ## Prerequisites
 
-Before setting up, ensure you have:
-
-- **Python 3.12** installed ([download](https://www.python.org/downloads/))
-- **pip** (comes with Python)
-- **Git** (for cloning the repository)
-- **OpenAI API key** — required for the LLM (GPT-4o-mini) and text embeddings
-- **Tavily API key** — required for web search ([get one free](https://tavily.com))
-- **Operating System:** Windows, macOS, or Linux
-- **Internet connection** for API calls (web search + embeddings)
+- **Python 3.12** ([download](https://www.python.org/downloads/))
+- **OpenAI API key** — for GPT-4o-mini and text embeddings
+- **Tavily API key** — for web search, free tier at [tavily.com](https://tavily.com)
+- **Internet connection** for API calls
 - **No GPU required** — all computation uses cloud APIs
 
 ---
@@ -162,8 +161,8 @@ Before setting up, ensure you have:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/samrat-kar/rag-research-assistant.git
-cd rag-research-assistant
+git clone https://github.com/samrat-kar/agentic-ai-production.git
+cd agentic-ai-production
 ```
 
 ### 2. Create a virtual environment
@@ -197,7 +196,7 @@ pip install -r requirements-dev.txt
 
 ## Configuration
 
-Create a `.env` file in the project root (copy from `.env.example`):
+Create a `.env` file in the project root:
 
 ```bash
 cp .env.example .env   # then edit with your keys
@@ -208,9 +207,9 @@ cp .env.example .env   # then edit with your keys
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `OPENAI_API_KEY` | **Yes** | — | OpenAI API key for GPT-4o-mini and embeddings |
-| `TAVILY_API_KEY` | **Yes** | — | Tavily API key for web search (Research Agent) |
-| `OPENAI_MODEL` | No | `gpt-4o-mini` | OpenAI chat model to use |
-| `OPENAI_EMBEDDING_MODEL` | No | `text-embedding-3-small` | OpenAI embedding model for the vector store |
+| `TAVILY_API_KEY` | **Yes** (Full Research) | — | Tavily API key for web search |
+| `OPENAI_MODEL` | No | `gpt-4o-mini` | OpenAI chat model |
+| `OPENAI_EMBEDDING_MODEL` | No | `text-embedding-3-small` | OpenAI embedding model |
 | `CHROMA_COLLECTION_NAME` | No | `rag_documents` | Name for the in-memory vector collection |
 
 ### Knowledge Base
@@ -223,20 +222,21 @@ The repository ships with sample files on AI, quantum computing, biotechnology, 
 
 ## Usage
 
-### Multi-Agent Crew (main entry point)
+### Web UI (recommended)
 
-Run the full 3-agent pipeline:
+```bash
+streamlit run streamlit_app.py
+```
+
+Opens at `http://localhost:8501`. Choose **Quick Mode** or **Full Research** from the sidebar.
+
+### Multi-Agent Crew (CLI)
 
 ```bash
 python -m src.main "What are the latest advances in quantum computing?"
 ```
 
-If no question is provided, it defaults to: *"Explain RAG and why chunk overlap helps."*
-
-**Output:**
-- Verbose agent logs printed to console
-- Final result printed after `===== FINAL RESULT =====`
-- Markdown report saved to `./outputs/report.md`
+Output: verbose agent logs + `./outputs/report.md`.
 
 ### Demo / Interactive Mode
 
@@ -244,170 +244,40 @@ If no question is provided, it defaults to: *"Explain RAG and why chunk overlap 
 python demo.py
 ```
 
-This runs three preset queries, then enters an interactive loop (type `quit` to exit).
-
----
-
-## Code Examples
-
-### Example 1: Run a research query from the command line
-
-```bash
-python -m src.main "Compare solar and wind energy efficiency"
-```
-
-**Expected output** (abbreviated):
-```
-===== FINAL RESULT =====
-
-# Solar vs Wind Energy Efficiency Report
-## Short Answer
-Solar panels convert 15-22% of sunlight into electricity, while wind
-turbines achieve 35-45% efficiency...
-## Sources
-- sustainable_energy.txt
-- https://...
-```
-
-The full report is saved to `./outputs/report.md`.
-
-### Example 2: Use the RAGAssistant class programmatically
-
-```python
-from src.app import RAGAssistant
-
-assistant = RAGAssistant()
-assistant.load_and_ingest("./data")
-
-result = assistant.query_with_agent("What is feature engineering?")
-print(result["answer"])    # LLM-generated answer
-print(result["sources"])   # e.g. ['sample_documents.txt']
-```
-
-### Example 3: Interactive demo session
-
-```bash
-$ python demo.py
-Loaded 7 documents from ./data
-...
-Example queries (tool-calling agent):
-
-Q: What is machine learning?
-A: Machine learning is a subset of artificial intelligence that enables
-   systems to learn from data without explicit programming...
-Sources: artificial_intelligence.txt, sample_documents.txt
-
-Interactive mode (type 'quit' to exit)
-
-You: What is CRISP-DM?
-Assistant: CRISP-DM is a data science methodology with six phases:
-   Business Understanding, Data Understanding, Data Preparation,
-   Modeling, Evaluation, and Deployment...
-Sources: sample_documents.txt
-```
-
----
-
-## Testing
-
-### Run the test suite
-
-```bash
-pytest tests/ -v
-```
-
-### Run with coverage
-
-```bash
-pytest tests/ --cov=src --cov-report=term-missing
-```
-
-### What's tested
-
-- `tests/test_vectordb.py` — Vector database chunking, add/search operations
-- `tests/test_tools.py` — Calculator tool, RAG search tool, save report tool
-- `tests/test_main.py` — CLI entry point and argument parsing
-
----
-
-## Repository Structure
-
-```
-rag-research-assistant/
-├── .env.example              # Template for environment variables
-├── .gitignore                # Git ignore rules
-├── LICENSE                   # CC BY-NC-SA 4.0 license
-├── README.md                 # This file — project documentation
-├── CONTRIBUTING.md           # Contribution guidelines
-├── CHANGELOG.md              # Version history
-├── CODE_OF_CONDUCT.md        # Contributor code of conduct
-├── Dockerfile                # Container build for reproducible runs
-├── pyproject.toml            # Python project config (linting, Python version)
-├── requirements.txt          # Production dependencies (pinned)
-├── requirements-dev.txt      # Dev/test dependencies
-├── demo.py                   # Interactive single-agent demo CLI
-├── instructions.md           # Detailed setup & usage walkthrough
-├── data/                     # Local knowledge base (RAG source documents)
-│   ├── artificial_intelligence.txt
-│   ├── biotechnology.txt
-│   ├── climate_science.txt
-│   ├── quantum_computing.txt
-│   ├── sample_documents.txt
-│   ├── space_exploration.txt
-│   └── sustainable_energy.txt
-├── outputs/                  # Generated reports (git-ignored)
-│   └── report.md
-├── src/                      # Application source code
-│   ├── __init__.py
-│   ├── main.py               # CLI entry point — parses question, runs crew
-│   ├── crew.py               # CrewAI agents, tasks, and sequential workflow
-│   ├── tools.py              # Custom tools: RAG search, calculator, report saver
-│   ├── app.py                # RAGAssistant class (used by demo.py)
-│   └── vectordb.py           # In-memory vector store with cosine-similarity search
-└── tests/                    # Test suite
-    ├── __init__.py
-    ├── test_vectordb.py      # VectorDB unit tests
-    ├── test_tools.py         # Tool unit tests
-    └── test_main.py          # CLI integration tests
-```
-
-| Directory | Purpose |
-|-----------|---------|
-| `src/` | All application source code — agents, tools, vector DB, CLI |
-| `data/` | Knowledge base documents ingested into the vector store at runtime |
-| `outputs/` | Auto-generated reports from the Writer Agent |
-| `tests/` | Automated test suite (pytest) |
+Runs three preset queries then enters an interactive CLI loop.
 
 ---
 
 ## Web UI (Streamlit)
 
-The project ships with a full Streamlit web application (`streamlit_app.py`) as the primary user-facing interface.
+![Home screen](https://raw.githubusercontent.com/samrat-kar/agentic-ai-production/main/screenshots/ui_home.png)
 
-### Starting the UI
+*Home screen — sidebar configuration and research question input*
 
-```bash
-streamlit run streamlit_app.py
-```
+![Results screen](https://raw.githubusercontent.com/samrat-kar/agentic-ai-production/main/screenshots/ui_results.png)
 
-The app opens at `http://localhost:8501` by default.
+*Results screen — grounded answer with cited sources and elapsed time*
+
+![History panel](https://raw.githubusercontent.com/samrat-kar/agentic-ai-production/main/screenshots/ui_history.png)
+
+*Query history — timestamps, mode, and response times for all session queries*
 
 ### Features
 
 | Feature | Description |
 |---------|-------------|
-| **Quick Mode** | Single RAGAssistant agent, local corpus only — fast results |
-| **Full Research** | 3-agent CrewAI pipeline with live Tavily web search — thorough |
-| **Sidebar config** | API keys (OpenAI, Tavily), mode, timeout, RAG top-k, data directory |
-| **Input safety** | Questions are validated and sanitised before reaching agents |
+| **Quick Mode** | Single RAGAssistant agent, local corpus only — ~5–10 seconds |
+| **Full Research** | 3-agent CrewAI pipeline with live Tavily web search — ~30–60 seconds |
+| **Sidebar config** | API keys, mode, timeout (30–300s), RAG top-k, data directory |
+| **Input safety** | Questions validated and sanitised before reaching agents |
 | **Progress spinner** | Real-time status while research runs |
-| **Formatted output** | Answers rendered as Markdown; raw JSON available via expander |
-| **Query history** | Collapsible history panel with timestamps and elapsed time |
-| **Error messages** | Clear, actionable messages for API key issues, timeouts, and validation failures |
+| **Formatted output** | Answers rendered as Markdown; raw JSON via expander |
+| **Query history** | Collapsible panel with timestamps and elapsed time |
+| **Error messages** | Clear, actionable messages for every failure mode |
 
 ### Resetting the assistant cache
 
-The RAGAssistant is cached in `st.session_state`. To reload documents (e.g. after adding new files to `./data`), refresh the browser page.
+The RAGAssistant is cached in `st.session_state`. To reload documents after adding new files to `./data`, refresh the browser page.
 
 ---
 
@@ -415,29 +285,30 @@ The RAGAssistant is cached in `st.session_state`. To reload documents (e.g. afte
 
 All user inputs pass through `src/safety.py` before reaching any agent or tool.
 
-### Input validation (`validate_question`)
+### Input Validation (`validate_question`)
 
 | Check | Detail |
 |-------|--------|
 | Type check | Must be a `str` |
-| Length | Min 3 / max 2 000 characters |
-| Prompt-injection detection | Regex patterns block common override phrases (e.g. "ignore previous instructions", "DAN mode", `<system>` tags) |
+| Length | Min 3 / max 2,000 characters |
+| Prompt-injection detection | 10 regex patterns block override phrases (`"ignore previous instructions"`, `"DAN mode"`, `<system>` tags, etc.) |
 | Control-character stripping | Null bytes and non-printable characters removed; newlines preserved |
 
-### Filename sanitisation (`sanitize_filename`)
+### Filename Sanitisation (`sanitize_filename`)
 
 - Removes `..` path-traversal sequences
 - Replaces `/`, `\`, and shell-special characters with `_`
-- Ensures an empty filename falls back to `report.md`
+- Falls back to `report.md` if result is empty
 
-### Output filtering (`filter_output`)
+### Output Filtering (`filter_output`)
 
-- Truncates LLM responses exceeding 50 000 characters
-- Appends a visible truncation notice when the limit is hit
+- Truncates LLM responses exceeding 50,000 characters
+- Appends a visible truncation notice — no silent data loss
 
-### Logging for compliance
+### Calculator Sandboxing (`CalculatorTool`)
 
-Every validation event — success, rejection, and truncation — is written to `app.log` at `INFO` / `WARNING` level with the first 100 characters of the input for auditability without storing full user data.
+- Character allowlist: `0-9 + - * / ( ) . %` — anything else is rejected before `eval`
+- `eval()` runs with `{"__builtins__": {}}` — no imports, no functions, no variables
 
 ---
 
@@ -445,22 +316,21 @@ Every validation event — success, rejection, and truncation — is written to 
 
 `src/resilience.py` provides three independent building blocks.
 
-### `with_retry` — exponential-backoff decorator
+### `with_retry` — Exponential Backoff Decorator
 
 ```python
 from src.resilience import with_retry
 
 @with_retry(max_retries=3, initial_wait=1.0, max_wait=30.0, backoff_factor=2.0,
-            exceptions=(openai.RateLimitError, ConnectionError))
+            exceptions=(ConnectionError,))
 def call_api():
     ...
 ```
 
-- Every failed attempt is logged at `WARNING` with attempt number and wait time.
-- Final failure is logged at `ERROR`.
-- Default: 3 retries, 1 s → 2 s → 4 s waits (capped at 30 s).
+- Wait schedule: 1s → 2s → 4s (capped at 30s)
+- Each retry logged at `WARNING`; final failure at `ERROR`
 
-### `run_with_timeout` — wall-clock timeout
+### `run_with_timeout` — Wall-Clock Timeout
 
 ```python
 from src.resilience import run_with_timeout
@@ -468,28 +338,27 @@ from src.resilience import run_with_timeout
 result = run_with_timeout(crew.kickoff, timeout_seconds=120, inputs={"question": q})
 ```
 
-- Thread-based (`ThreadPoolExecutor`) — works on Windows and Unix.
-- Raises `TimeoutError` with a clear message; logged at `ERROR`.
+- Thread-based (`ThreadPoolExecutor`) — works on Windows and Unix
+- Timeout configurable via the Streamlit sidebar (30–300 seconds)
 
-### `IterationLimiter` — loop cap
+### `IterationLimiter` — Loop Cap
 
 ```python
 from src.resilience import IterationLimiter
 
-limiter = IterationLimiter(max_iterations=20, label="agent_loop")
+limiter = IterationLimiter(max_iterations=50, label="agent_loop")
 while condition:
-    limiter.tick()   # raises RuntimeError after 20 iterations
-    ...
+    limiter.tick()   # raises RuntimeError after 50 iterations
 ```
 
-- Prevents silent infinite loops in agent or tool cycles.
-- Supports `.reset()` and `.remaining` for monitoring.
+- Prevents silent infinite loops in agent or tool cycles
+- `.reset()` and `.remaining` for monitoring
 
 ---
 
 ## Interface Specification
 
-### CLI interface (`src/main.py`)
+### CLI (`src/main.py`)
 
 ```
 python -m src.main [QUESTION]
@@ -497,13 +366,9 @@ python -m src.main [QUESTION]
 
 | Input | Type | Description |
 |-------|------|-------------|
-| `QUESTION` | Positional string (optional) | Research question; defaults to `"Explain RAG and why chunk overlap helps."` |
+| `QUESTION` | Positional string (optional) | Defaults to `"Explain RAG and why chunk overlap helps."` |
 
-**Output:**
-- Verbose agent logs to `stdout`
-- Final result printed after `===== FINAL RESULT =====`
-- Report saved to `./outputs/report.md`
-- Exit code `0` on success
+**Output:** verbose logs to `stdout`, report saved to `./outputs/report.md`, exit code `0`.
 
 ### RAGAssistant API (`src/app.py`)
 
@@ -515,79 +380,145 @@ assistant.load_and_ingest("./data")
 result = assistant.query_with_agent("Your question", n_results=3)
 ```
 
-**`query_with_agent` return schema:**
+**Return schema:**
 
 ```json
 {
-  "question":      "string — original question",
-  "answer":        "string — LLM-generated answer",
-  "context_chunks": ["string", "..."],
-  "sources":       ["string — filenames used"],
-  "mode":          "agent_tool_calling"
+  "question":       "string",
+  "answer":         "string",
+  "context_chunks": ["string"],
+  "sources":        ["filename"],
+  "mode":           "agent_tool_calling"
 }
 ```
 
 ### `build_crew` API (`src/crew.py`)
 
 ```python
-from src.crew import build_crew
-
 crew = build_crew(data_dir="data")
 result = crew.kickoff(inputs={"question": "..."})
 ```
 
-**`kickoff` input schema:**
-
-| Key | Type | Required | Description |
-|-----|------|----------|-------------|
-| `question` | string | Yes | Research question injected into all task prompts |
-
-**Output:** CrewAI `CrewOutput` object (str-able); report also saved to `./outputs/report.md`.
+Input: `{"question": str}` — injected into all task prompts.
+Output: `CrewOutput` (str-able) + saved `./outputs/report.md`.
 
 ### Safety API (`src/safety.py`)
 
-| Function | Signature | Returns | Raises |
-|----------|-----------|---------|--------|
-| `validate_question` | `(question: str) -> str` | Sanitised question | `InputValidationError` |
-| `sanitize_filename` | `(filename: str) -> str` | Safe filename | — |
-| `filter_output` | `(text: str, max_length: int) -> str` | Truncated text | — |
+| Function | Returns | Raises |
+|----------|---------|--------|
+| `validate_question(question)` | Sanitised `str` | `InputValidationError` |
+| `sanitize_filename(filename)` | Safe `str` | — |
+| `filter_output(text, max_length)` | Truncated `str` | — |
 
 ### Resilience API (`src/resilience.py`)
 
-| Function / Class | Usage |
-|-----------------|-------|
-| `@with_retry(...)` | Decorator — wraps any callable with retry logic |
-| `run_with_timeout(func, seconds, *args, **kwargs)` | Runs `func` with a hard timeout |
-| `IterationLimiter(max_iterations, label)` | `.tick()` / `.reset()` / `.remaining` |
+| Interface | Usage |
+|-----------|-------|
+| `@with_retry(max_retries, initial_wait, max_wait, backoff_factor, exceptions)` | Decorator |
+| `run_with_timeout(func, timeout_seconds, *args, **kwargs)` | Returns result or raises `TimeoutError` |
+| `IterationLimiter(max_iterations, label)` | `.tick()` / `.reset()` / `.remaining` / `.count` |
+
+---
+
+## Code Examples
+
+### Run a research query from the command line
+
+```bash
+python -m src.main "Compare solar and wind energy efficiency"
+```
+
+### Use the RAGAssistant programmatically
+
+```python
+from src.app import RAGAssistant
+
+assistant = RAGAssistant()
+assistant.load_and_ingest("./data")
+result = assistant.query_with_agent("What is feature engineering?")
+print(result["answer"])
+print(result["sources"])   # e.g. ['sample_documents.txt']
+```
+
+### Use safety and resilience utilities
+
+```python
+from src.safety import validate_question, InputValidationError
+from src.resilience import with_retry, run_with_timeout
+
+# Validate before passing to agents
+try:
+    question = validate_question(user_input)
+except InputValidationError as e:
+    print(f"Invalid input: {e}")
+
+# Wrap a flaky API call with retry
+@with_retry(max_retries=3, initial_wait=1.0, exceptions=(ConnectionError,))
+def search_web(query):
+    ...
+
+# Run with timeout
+result = run_with_timeout(assistant.query_with_agent, 60, question)
+```
+
+---
+
+## Testing
+
+### Run the full test suite
+
+```bash
+pytest tests/ -v
+```
+
+### Run with coverage report
+
+```bash
+pytest tests/ --cov=src --cov-report=term-missing
+```
+
+### Test files — 63 tests across 7 files
+
+| File | Tests | Covers |
+|------|-------|--------|
+| `tests/test_vectordb.py` | 5 | VectorDB chunking, add, search, empty DB |
+| `tests/test_tools.py` | 7 | CalculatorTool, SaveReportTool, LocalRAGSearchTool |
+| `tests/test_main.py` | 2 | CLI argument parsing, default question |
+| `tests/test_safety.py` | 22 | Input validation, injection detection, output filtering |
+| `tests/test_resilience.py` | 18 | Retry, timeout, iteration limiter |
+| `tests/test_app.py` | 11 | RAGAssistant init, load, ingest, query |
+| `tests/test_integration.py` | 17 | Cross-module pipelines, end-to-end flows |
+
+All external API calls are mocked — **no real API keys needed to run tests**.
 
 ---
 
 ## Deployment Guide
 
-### Local (development)
+### Local development
 
 ```bash
-# 1. Clone & enter
-git clone https://github.com/samrat-kar/rag-research-assistant.git
-cd rag-research-assistant
+# Clone
+git clone https://github.com/samrat-kar/agentic-ai-production.git
+cd agentic-ai-production
 
-# 2. Create virtual environment
-python -m venv .venv
-source .venv/bin/activate          # macOS/Linux
-.venv\Scripts\Activate.ps1         # Windows PowerShell
+# Virtual environment
+py -3.12 -m venv .venv312
+.\.venv312\Scripts\Activate.ps1      # Windows
+source .venv312/bin/activate          # macOS/Linux
 
-# 3. Install dependencies
+# Install
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
 
-# 4. Configure secrets
+# Configure
 cp .env.example .env
-# Edit .env and add OPENAI_API_KEY and TAVILY_API_KEY
+# Add OPENAI_API_KEY and TAVILY_API_KEY to .env
 
-# 5a. Run web UI
+# Run web UI
 streamlit run streamlit_app.py
 
-# 5b. Run CLI
+# Run CLI
 python -m src.main "Your research question"
 ```
 
@@ -600,22 +531,10 @@ docker build -t rag-assistant .
 # Run CLI
 docker run --env-file .env rag-assistant "What is quantum entanglement?"
 
-# Run web UI (expose port 8501)
+# Run web UI
 docker run --env-file .env -p 8501:8501 rag-assistant \
   streamlit run streamlit_app.py --server.address 0.0.0.0
 ```
-
-### Environment variables reference
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `OPENAI_API_KEY` | **Yes** | — | OpenAI API key for GPT-4o-mini and embeddings |
-| `TAVILY_API_KEY` | **Yes** (Full Research) | — | Tavily API key for live web search |
-| `OPENAI_MODEL` | No | `gpt-4o-mini` | OpenAI chat model |
-| `OPENAI_EMBEDDING_MODEL` | No | `text-embedding-3-small` | OpenAI embedding model |
-| `CHROMA_COLLECTION_NAME` | No | `rag_documents` | Name of the in-memory collection |
-
-Copy `.env.example` to `.env` and fill in the required values.
 
 ---
 
@@ -623,145 +542,143 @@ Copy `.env.example` to `.env` and fill in the required values.
 
 ### Log output
 
-The application writes structured logs to:
-- **`app.log`** — Streamlit UI logs (file handler)
-- **`stdout`** — all runs (console handler)
+| Destination | Content |
+|-------------|---------|
+| `app.log` | Streamlit UI logs (file handler) |
+| `stdout` | All runs (console handler) |
 
-Log format: `YYYY-MM-DD HH:MM:SS [LEVEL] module: message`
+Format: `YYYY-MM-DD HH:MM:SS [LEVEL] module: message`
 
-Key logged events:
+### Key logged events
 
 | Event | Level | Module |
 |-------|-------|--------|
 | Input validated | INFO | `src.safety` |
-| Prompt-injection detected | WARNING | `src.safety` |
+| Injection detected | WARNING | `src.safety` |
 | Output truncated | WARNING | `src.safety` |
 | Retry attempt | WARNING | `src.resilience` |
 | Final failure after retries | ERROR | `src.resilience` |
 | Timeout exceeded | ERROR | `src.resilience` |
 | Iteration limit exceeded | ERROR | `src.resilience` |
 | Documents loaded | INFO | `src.app` / `src.tools` |
-| Embeddings generated | INFO | `src.vectordb` |
 | Research complete | INFO | `streamlit_app` |
 
-### Health check (CLI)
-
-Verify the environment is set up correctly:
+### Health check
 
 ```bash
 python -c "
-from src.vectordb import VectorDB
 from src.tools import load_local_docs
 docs = load_local_docs('data')
 print(f'OK — loaded {len(docs)} documents from ./data')
 "
 ```
 
-Expected output: `OK — loaded 7 documents from ./data`
+Expected: `OK — loaded 7 documents from ./data`
 
 ---
 
 ## Troubleshooting & FAQ
 
-### 1. `OPENAI_API_KEY is required` error
+### 1. `OPENAI_API_KEY is required`
+**Fix:** `cp .env.example .env` then add `OPENAI_API_KEY=sk-...`
 
-**Cause:** The `.env` file is missing or the key is not set.
+### 2. Tavily / web search fails
+**Fix:** Add `TAVILY_API_KEY` to `.env` or switch to **Quick Mode** in the sidebar.
 
-**Fix:**
+### 3. Streamlit shows "An unexpected error occurred"
+**Fix:** Check `app.log` for the full traceback. Verify API keys and internet connection. If timeout, increase the slider.
+
+### 4. `No relevant local context found` on every answer
+**Fix:** Confirm `./data` has `.txt` / `.md` files:
 ```bash
-cp .env.example .env
-# Open .env and add:  OPENAI_API_KEY=sk-...
-```
-
----
-
-### 2. `TavilySearchTool` / web search fails
-
-**Cause:** `TAVILY_API_KEY` is missing or expired.
-
-**Fix:** Add a valid Tavily key to `.env` or use **Quick Mode** (no web search required).
-
----
-
-### 3. Streamlit app shows "An unexpected error occurred"
-
-**Fix steps:**
-1. Check `app.log` for the full traceback.
-2. Verify both API keys are set in the sidebar or `.env`.
-3. Check your internet connection (required for OpenAI and Tavily calls).
-4. If the error is a timeout, increase the **Timeout** slider in the sidebar.
-
----
-
-### 4. `No relevant local context found` in every answer
-
-**Cause:** The `./data` directory is empty or the documents failed to ingest.
-
-**Fix:**
-```bash
-ls data/          # confirm files exist
 python -c "from src.tools import load_local_docs; print(load_local_docs('data'))"
 ```
 
-If the list is empty, add `.txt` / `.md` files to `./data` and restart.
-
----
-
-### 5. Tests fail with `OPENAI_API_KEY` errors
-
-All tests mock the OpenAI client — no real key is needed.  Make sure you are running from the project root:
-
+### 5. Tests fail with API key errors
+Tests mock all external calls — no key needed. Run from the project root with the venv active:
 ```bash
 pytest tests/ -v
 ```
 
-If you see import errors, ensure the virtual environment is activated and dependencies are installed:
-
-```bash
-pip install -r requirements-dev.txt
-```
-
----
-
 ### 6. `ModuleNotFoundError: No module named 'streamlit'`
-
 ```bash
-pip install streamlit>=1.35.0
-# or
 pip install -r requirements.txt
 ```
 
----
-
 ### 7. Docker container exits immediately
-
-Ensure the `.env` file is in the project root and passed to `docker run`:
-
 ```bash
 docker run --env-file .env rag-assistant "Test question"
 ```
 
----
-
-### 8. Reports are not saved
-
-The `./outputs/` directory is created automatically.  If you see permission errors, ensure the process has write access to the working directory.  For Docker, mount a volume:
-
+### 8. Reports not saved
+`./outputs/` is created automatically. For Docker, mount a volume:
 ```bash
 docker run --env-file .env -v $(pwd)/outputs:/app/outputs rag-assistant "Question"
 ```
 
 ---
 
+## Repository Structure
+
+```
+agentic-ai-production/
+├── .env.example              # Environment variable template
+├── .gitignore
+├── LICENSE                   # CC BY-NC-SA 4.0
+├── README.md
+├── CONTRIBUTING.md
+├── CHANGELOG.md
+├── CODE_OF_CONDUCT.md
+├── Dockerfile
+├── pyproject.toml            # Python config (linting, version)
+├── requirements.txt          # Production dependencies
+├── requirements-dev.txt      # Dev/test dependencies
+├── streamlit_app.py          # Streamlit web UI
+├── demo.py                   # Interactive single-agent CLI demo
+├── data/                     # Local knowledge base
+│   ├── artificial_intelligence.txt
+│   ├── biotechnology.txt
+│   ├── climate_science.txt
+│   ├── quantum_computing.txt
+│   ├── sample_documents.txt
+│   ├── space_exploration.txt
+│   └── sustainable_energy.txt
+├── screenshots/              # Streamlit UI screenshots
+│   ├── ui_home.png
+│   ├── ui_results.png
+│   └── ui_history.png
+├── outputs/                  # Generated reports (git-ignored)
+├── src/
+│   ├── __init__.py
+│   ├── main.py               # CLI entry point
+│   ├── crew.py               # CrewAI agents, tasks, pipeline
+│   ├── tools.py              # Custom tools (RAG, calculator, report saver)
+│   ├── app.py                # RAGAssistant (single-agent, Quick Mode)
+│   ├── vectordb.py           # In-memory vector store
+│   ├── safety.py             # Input validation, output filtering
+│   └── resilience.py         # Retry, timeout, iteration limiter
+└── tests/
+    ├── __init__.py
+    ├── test_vectordb.py      # VectorDB unit tests
+    ├── test_tools.py         # Tool unit tests
+    ├── test_main.py          # CLI tests
+    ├── test_safety.py        # Safety module tests (22 tests)
+    ├── test_resilience.py    # Resilience module tests (18 tests)
+    ├── test_app.py           # RAGAssistant tests (11 tests)
+    └── test_integration.py   # Integration & E2E tests (17 tests)
+```
+
+---
+
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute to this project.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ---
 
 ## License
 
-This project is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International](LICENSE) license.
+Licensed under [CC BY-NC-SA 4.0](LICENSE) — free for non-commercial use with attribution.
 
 ---
 
@@ -774,5 +691,4 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 ## Contact
 
 **Maintainer:** Samrat Kar
-**Email:** samrat.kar@example.com
-**GitHub:** [samrat-kar](https://github.com/samrat-kar)
+**GitHub:** [samrat-kar77](https://github.com/samratkar77)
