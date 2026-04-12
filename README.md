@@ -695,4 +695,4 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 ## Contact
 
 **Maintainer:** Samrat Kar
-**GitHub:** [samrat-kar77](https://github.com/samratkar77)
+**GitHub:** [samrat-kar](https://github.com/samrat-kar)
