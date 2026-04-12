@@ -2,6 +2,10 @@
 
 A production-grade multi-agent research assistant that combines live web search with local document retrieval (RAG) to produce grounded, source-cited answers. Three specialised AI agents — Research Agent, Analyst Agent, and Writer Agent — collaborate in a sequential pipeline orchestrated by **CrewAI**. A **Streamlit web UI**, **safety guardrails**, **resilience utilities**, and a **63-test suite** make the system production-ready beyond a basic demo.
 
+## Links
+
+- Publication: [Building a Production-Ready Multi-Agent RAG Assistant with CrewAI, Safety Guardrails, and Streamlit](https://app.readytensor.ai/publications/building-a-production-ready-multi-agent-rag-assistant-with-crewai-safety-guardrails-and-streamlit-M8RsBzlrftZW)
+
 ---
 
 ## Table of Contents
