@@ -567,17 +567,43 @@ Format: `YYYY-MM-DD HH:MM:SS [LEVEL] module: message`
 | Documents loaded | INFO | `src.app` / `src.tools` |
 | Research complete | INFO | `streamlit_app` |
 
-### Health check
+### Health checks
+
+`src/health.py` provides a dedicated health-check module that verifies every system component before users hit it.
 
 ```bash
-python -c "
-from src.tools import load_local_docs
-docs = load_local_docs('data')
-print(f'OK — loaded {len(docs)} documents from ./data')
-"
+# Human-readable report (exits 0 if healthy, 1 if degraded)
+python -m src.health
+
+# Machine-readable JSON (for CI or monitoring scripts)
+python -m src.health --json
 ```
 
-Expected: `OK — loaded 7 documents from ./data`
+Sample output:
+
+```text
+=== Health Check: HEALTHY ===
+
+Environment Variables:
+  [OK  ] OPENAI_API_KEY: ok
+  [OK  ] TAVILY_API_KEY: ok
+  [OK  ] OPENAI_MODEL: gpt-4o-mini (default)
+
+Dependencies:
+  [OK  ] crewai: ok
+  [OK  ] langchain_openai: ok
+  ...
+
+Data Directory:
+  [OK  ] Status: ok — 7 document(s) ready for ingestion.
+             - artificial_intelligence.txt
+             ...
+
+Outputs Directory:
+  [OK  ] Status: ok — ./outputs
+```
+
+The Streamlit sidebar also shows a live **System Status** badge (OpenAI key / Tavily key / doc count) so users immediately know if configuration is incomplete.
 
 ---
 
@@ -674,6 +700,40 @@ agentic-ai-production/
 
 ---
 
+## Maintenance & Support
+
+### Maintenance status
+
+This project is **actively maintained**. Bug reports, feature requests, and pull requests are welcome.
+
+### Versioning
+
+This project follows [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`):
+
+| Part | When it changes |
+| ------ | ---------------- |
+| `MAJOR` | Breaking API or interface changes |
+| `MINOR` | New backward-compatible features |
+| `PATCH` | Bug fixes and documentation updates |
+
+Current version: **1.0.0** — see [CHANGELOG.md](CHANGELOG.md) for the full release history.
+
+### Support channels
+
+| Channel | Purpose |
+| --------- | --------- |
+| [GitHub Issues](https://github.com/samrat-kar/agentic-ai-production/issues) | Bug reports, feature requests |
+| [GitHub Discussions](https://github.com/samrat-kar/agentic-ai-production/discussions) | Questions, usage help, ideas |
+| [ReadyTensor publication](https://app.readytensor.ai/publications/building-a-production-ready-multi-agent-rag-assistant-with-crewai-safety-guardrails-and-streamlit-M8RsBzlrftZW) | Conceptual questions and commentary |
+
+Before opening an issue, run the health check to rule out configuration problems:
+
+```bash
+python -m src.health
+```
+
+---
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
@@ -696,3 +756,4 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 
 **Maintainer:** Samrat Kar
 **GitHub:** [samrat-kar](https://github.com/samrat-kar)
+**Issues:** [github.com/samrat-kar/agentic-ai-production/issues](https://github.com/samrat-kar/agentic-ai-production/issues)

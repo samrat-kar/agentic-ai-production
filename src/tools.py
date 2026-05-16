@@ -45,8 +45,8 @@ def load_local_docs(data_dir: str = "data") -> List[Dict[str, Any]]:
             docs.append(
                 {"content": content, "metadata": {"source": fp.name, "path": str(fp)}}
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("Skipping %s — could not read file: %s", fp.name, exc)
     return docs
 
 

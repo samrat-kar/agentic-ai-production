@@ -27,6 +27,16 @@ from .tools import build_vectordb, LocalRAGSearchTool, CalculatorTool, SaveRepor
 def build_crew(data_dir: str = "data") -> Crew:
     load_dotenv()
 
+    if not os.getenv("OPENAI_API_KEY"):
+        raise ValueError(
+            "OPENAI_API_KEY is not set. Add it to your .env file or environment before running."
+        )
+    if not os.getenv("TAVILY_API_KEY"):
+        raise ValueError(
+            "TAVILY_API_KEY is not set. Full Research mode requires it for live web search. "
+            "Add it to your .env file or switch to Quick Mode."
+        )
+
     # LLM (LangChain OpenAI wrapper)
     model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
     llm = ChatOpenAI(model=model, temperature=0.2)

@@ -57,6 +57,39 @@ st.set_page_config(
 load_dotenv()
 
 # ---------------------------------------------------------------------------
+# Sidebar — health status
+# ---------------------------------------------------------------------------
+
+
+def _render_health_status() -> None:
+    """Render a compact health status panel in the sidebar."""
+    from src.health import check_environment, check_data_directory
+
+    env = check_environment()
+    openai_ok = env["OPENAI_API_KEY"] == "ok"
+    tavily_ok = env["TAVILY_API_KEY"] == "ok"
+
+    data_dir = st.session_state.get("_health_data_dir", "data")
+    data = check_data_directory(data_dir)
+    data_ok = data["status"] == "ok"
+
+    def _badge(ok: bool, label: str) -> str:
+        colour = "green" if ok else "red"
+        icon = "✓" if ok else "✗"
+        return f":{colour}[{icon} {label}]"
+
+    st.sidebar.markdown(
+        f"{_badge(openai_ok, 'OpenAI key')}  "
+        f"{_badge(tavily_ok, 'Tavily key')}  "
+        f"{_badge(data_ok, f'{data[\"file_count\"]} docs')}"
+    )
+    if not openai_ok:
+        st.sidebar.warning("OpenAI API key is missing — queries will fail.")
+    if not data_ok:
+        st.sidebar.info(f"Knowledge base: {data.get('message', data['status'])}")
+
+
+# ---------------------------------------------------------------------------
 # Sidebar — configuration
 # ---------------------------------------------------------------------------
 
@@ -120,9 +153,15 @@ def _render_sidebar() -> Dict[str, Any]:
     )
 
     st.sidebar.markdown("---")
+    st.sidebar.markdown("### System Status")
+    _render_health_status()
+
+    st.sidebar.markdown("---")
     st.sidebar.markdown(
-        "**About** · [GitHub](https://github.com/samrat-kar/rag-research-assistant) · "
-        "[Docs](README.md)"
+        "**About** · "
+        "[GitHub](https://github.com/samrat-kar/agentic-ai-production) · "
+        "[Docs](README.md) · "
+        "[Issues](https://github.com/samrat-kar/agentic-ai-production/issues)"
     )
 
     return {

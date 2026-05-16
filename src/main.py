@@ -39,8 +39,23 @@ def main() -> None:
 
     logger.info("Starting crew with question: %s", question)
 
-    crew = build_crew(data_dir="data")
-    result = crew.kickoff(inputs={"question": question})
+    try:
+        crew = build_crew(data_dir="data")
+        result = crew.kickoff(inputs={"question": question})
+    except ValueError as exc:
+        logger.error("Configuration error: %s", exc)
+        print(f"\nConfiguration error: {exc}", file=sys.stderr)
+        print("Check that OPENAI_API_KEY and TAVILY_API_KEY are set in your .env file.", file=sys.stderr)
+        sys.exit(1)
+    except KeyboardInterrupt:
+        logger.info("Interrupted by user.")
+        print("\nInterrupted.", file=sys.stderr)
+        sys.exit(130)
+    except Exception as exc:
+        logger.exception("Crew execution failed: %s", exc)
+        print(f"\nError: {exc}", file=sys.stderr)
+        print("Run `python -m src.health` to diagnose the issue.", file=sys.stderr)
+        sys.exit(1)
 
     print("\n\n===== FINAL RESULT =====\n")
     print(result)
